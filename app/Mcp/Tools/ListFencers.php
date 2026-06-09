@@ -30,7 +30,7 @@ class ListFencers extends Tool
             'region' => $f->region(),
             'home_zip' => $f->home_zip,
             'drive_radius_miles' => $f->driveRadius(),
-            'goal' => $f->goal ? (config('fencing.goals')[$f->goal] ?? $f->goal) : null,
+            'goals' => $f->activeGoals()->map->label()->values(),
             'rating_progress_to_goal' => $f->ratingProgress(),
         ])->values());
     }

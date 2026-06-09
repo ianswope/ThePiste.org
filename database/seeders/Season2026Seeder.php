@@ -103,11 +103,14 @@ class Season2026Seeder extends Seeder
                 'home_zip' => '60515',
                 'home_lat' => 41.808,
                 'home_lng' => -88.011,
-                'goal' => 'earn_b',
                 'drive_radius_miles' => 450,
             ]
         );
         $farren->weapons()->updateOrCreate(['weapon' => 'foil'], ['rating' => 'C', 'is_primary' => true]);
+        $farren->goals()->updateOrCreate(
+            ['type' => 'rating', 'weapon' => 'foil'],
+            ['params' => ['target_rating' => 'B'], 'status' => 'active']
+        );
 
         foreach ($this->events() as $e) {
             [$lat, $lng] = $this->cities["{$e['city']}, {$e['state']}"] ?? [null, null];
@@ -126,6 +129,7 @@ class Season2026Seeder extends Seeder
                     'lat' => $lat,
                     'lng' => $lng,
                     'is_nac' => $e['nac'] ?? false,
+                    'circuits' => $this->circuitsFrom($e['name']),
                     'contested_events' => $e['ev'],
                     'curated_note' => $e['note'],
                 ]
@@ -138,6 +142,15 @@ class Season2026Seeder extends Seeder
      * Notes are kept as curated marquee copy; the personalization engine generates
      * per-fencer guidance and only falls back to these for flagship events.
      */
+    /** Circuit designators from the event name (same tokens the AskFRED sync uses). */
+    private function circuitsFrom(string $name): ?array
+    {
+        preg_match_all('/\b(ROC|RJCC|RYC|SYC|RCC|RPC)\b/i', $name, $m);
+        $circuits = array_values(array_unique(array_map('strtoupper', $m[1])));
+
+        return $circuits ?: null;
+    }
+
     private function events(): array
     {
         return [

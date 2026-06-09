@@ -68,7 +68,6 @@ class FencerFlowTest extends TestCase
             'age_group' => 'Cadet',
             'home_zip' => '60515',
             'drive_radius_miles' => 300,
-            'goal' => 'earn_b',
             'compete_foil' => '1',
             'rating_foil' => 'D',
             'compete_epee' => '1',

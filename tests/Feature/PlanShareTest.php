@@ -25,7 +25,7 @@ class PlanShareTest extends TestCase
         $user = User::factory()->create();
         $fencer = $user->fencers()->create([
             'name' => 'Kid', 'weapon' => 'foil', 'age_group' => 'Junior',
-            'rating' => 'C', 'goal' => 'earn_b', 'drive_radius_miles' => 450,
+            'rating' => 'C', 'drive_radius_miles' => 450,
             'home_lat' => 41.808, 'home_lng' => -88.011,
         ]);
         $fencer->weapons()->create(['weapon' => 'foil', 'rating' => 'C', 'is_primary' => true]);

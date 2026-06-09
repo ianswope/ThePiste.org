@@ -31,7 +31,12 @@ class GetProgress extends Tool
 
         return Response::json([
             'fencer' => $fencer->name,
-            'goal' => $fencer->goal ? (config('fencing.goals')[$fencer->goal] ?? $fencer->goal) : null,
+            'goals' => $fencer->activeGoals()->map(fn ($g) => [
+                'type' => $g->type,
+                'weapon' => $g->weapon,
+                'label' => $g->label(),
+                'params' => $g->params,
+            ])->values(),
             'current_rating' => $fencer->rating,
             'target_rating' => $fencer->targetRating(),
             'rating_ladder_progress' => $fencer->ratingProgress(),

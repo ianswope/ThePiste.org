@@ -87,6 +87,7 @@
             <button class="fb" data-f="plan">My Plan</button>
         @endif
         <button class="fb" data-f="nonneg">Anchors</button>
+        <button class="fb" data-f="goals">Goal Path</button>
         <button class="fb" data-f="official">Official Circuit</button>
         <button class="fb" data-f="nac">NACs</button>
         <button class="fb" data-f="priority">Priority + NAC</button>
@@ -122,7 +123,8 @@
                          data-region="{{ $r['in_region'] ? 1 : 0 }}"
                          data-home="{{ $r['is_home'] ? 1 : 0 }}"
                          data-plan="{{ $inPlan ? 1 : 0 }}"
-                         data-local="{{ $t->level === 'local' ? 1 : 0 }}">
+                         data-local="{{ $t->level === 'local' ? 1 : 0 }}"
+                         data-goals="{{ count($r['advances']) ? 1 : 0 }}">
                         <div class="tab t-{{ $r['tier'] }}">
                             <span>{{ $tierLabel[$r['tier']] }}</span>
                             <span class="mono">{{ strtoupper($distText) }}</span>
@@ -153,6 +155,13 @@
                                     <span class="chip {{ $r['tier'] === 'nac' && $isElig ? 'nac-hl' : ($isElig ? 'elig' : 'dim') }}">{{ $cat }}</span>
                                 @endforeach
                             </div>
+                            @if (count($r['advances']))
+                                <div class="advrow">
+                                    @foreach ($r['advances'] as $a)
+                                        <span class="adv" title="{{ $a['why'] }}">▸ {{ $a['label'] }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
                             <div class="cnote">
                                 {{ $r['note'] }}
                                 @if($r['conflict_with'])

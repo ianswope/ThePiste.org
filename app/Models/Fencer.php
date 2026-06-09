@@ -11,7 +11,7 @@ class Fencer extends Model
     protected $fillable = [
         'user_id', 'home_club_id', 'name', 'gender', 'handedness', 'birth_year',
         'usa_fencing_id', 'weapon', 'age_group', 'rating',
-        'home_zip', 'home_state', 'home_lat', 'home_lng', 'goal', 'include_fie', 'drive_radius_miles',
+        'home_zip', 'home_state', 'home_lat', 'home_lng', 'include_fie', 'drive_radius_miles',
     ];
 
     protected $casts = [
@@ -46,13 +46,31 @@ class Fencer extends Model
         return $this->hasMany(Result::class);
     }
 
+    public function goals(): HasMany
+    {
+        return $this->hasMany(Goal::class);
+    }
+
+    public function activeGoals()
+    {
+        return $this->goals()->active()->get();
+    }
+
     /** Letter rating ladder, lowest to highest. */
     public const RATING_LADDER = ['U', 'E', 'D', 'C', 'B', 'A'];
 
-    /** Target rating letter implied by the season goal (null = no rating goal). */
-    public function targetRating(): ?string
+    /** Highest target letter among active rating goals (primary weapon unless given). */
+    public function targetRating(?string $weapon = null): ?string
     {
-        return $this->goal === 'earn_b' ? 'B' : null;
+        $weapon ??= $this->weapon;
+
+        return $this->goals()->active()->where('type', 'rating')
+            ->get()
+            ->filter(fn (Goal $g) => $g->weapon === null || $g->weapon === $weapon)
+            ->map(fn (Goal $g) => $g->param('target_rating'))
+            ->filter()
+            ->sortByDesc(fn (string $r) => array_search($r, self::RATING_LADDER, true))
+            ->first();
     }
 
     /** 0.0-1.0 progress of the primary-weapon rating toward the goal rating. */

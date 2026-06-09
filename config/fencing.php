@@ -34,11 +34,41 @@ return [
         'ineligible' => 0,
     ],
 
-    'goals' => [
-        'earn_b' => 'Earn a B rating',
-        'qualify_jo' => 'Qualify for Junior Olympics',
-        'regional_standing' => 'Build regional standing',
-        'explore' => 'Explore / just getting started',
+    /*
+    | Structured goal types. Goals live in the goals table; these are the
+    | labels for the type picker.
+    */
+    'goal_types' => [
+        'rating' => 'Earn a rating',
+        'qualify' => 'Qualify for a championship',
+        'standing' => 'Build regional standing',
+        'develop' => 'Get competition mileage',
+    ],
+
+    // Categories where letter ratings are realistically earned (strong fields).
+    'rating_earning_categories' => ['D1A', 'DV2', 'OPEN'],
+
+    /*
+    | Path-aware qualification targets. The engine labels events that are ON
+    | a target's qualification path (circuits, named qualifiers, and the
+    | championship itself). It never computes "qualified" — those rules
+    | shift season to season.
+    */
+    'qualify_targets' => [
+        'jo' => [
+            'label' => 'Junior Olympics',
+            'path_circuits' => ['RJCC'],
+            'categories' => ['JNR', 'CDT'],
+            'qualifier_pattern' => '/junior\s+olympic.*qualif|jo\s+qualif/i',
+            'championship_pattern' => '/junior\s+olympics/i',
+        ],
+        'summer_nationals' => [
+            'label' => 'Summer Nationals',
+            'path_circuits' => ['ROC', 'RYC', 'RJCC'],
+            'categories' => [],
+            'qualifier_pattern' => '/qualif|divisional/i',
+            'championship_pattern' => '/summer\s+nationals/i',
+        ],
     ],
 
     /*

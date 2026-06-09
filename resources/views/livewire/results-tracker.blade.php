@@ -11,9 +11,20 @@
 
     <div class="panel" style="margin-bottom:24px;">
         <div class="row-between" style="margin-bottom:14px;">
-            <strong style="font-size:15px;">{{ $fencer->goal ? ($goals[$fencer->goal] ?? 'Season goal') : 'No goal set yet' }}</strong>
+            <strong style="font-size:15px;">{{ count($goalCards) ? 'Season goals' : 'No goals set yet' }}</strong>
             <span style="font-family:'Martian Mono',monospace;font-size:13px;color:var(--muted);">{{ ucfirst($fencer->weapon) }} · current {{ $fencer->rating }}</span>
         </div>
+
+        @foreach ($goalCards as $gc)
+            <div class="goalrow" wire:key="goalcard-{{ $gc['id'] }}">
+                <span class="adv">▸</span>
+                <span class="gname">{{ $gc['label'] }}</span>
+                <span class="gdetail">{{ $gc['detail'] }}</span>
+                @if ($gc['progress'] !== null && $gc['type'] !== 'rating')
+                    <div class="progressbar gmini"><span style="width: {{ round($gc['progress'] * 100) }}%"></span></div>
+                @endif
+            </div>
+        @endforeach
 
         @if ($progress !== null)
             <div class="ladder">
@@ -29,8 +40,8 @@
             </div>
             <div class="progressbar"><span style="width: {{ round($progress * 100) }}%"></span></div>
             <p class="help" style="margin-top:8px;">{{ round($progress * 100) }}% of the way from U to {{ $fencer->targetRating() }} on the rating ladder.</p>
-        @else
-            <p class="help">Set a rating goal (like "Earn a B") in the season builder to see ladder progress here.</p>
+        @elseif (! count($goalCards))
+            <p class="help">Set goals in the season builder and progress shows up here after each logged result.</p>
         @endif
 
         <div class="stat-tiles">

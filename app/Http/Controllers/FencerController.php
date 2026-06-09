@@ -96,7 +96,6 @@ class FencerController extends Controller
             'usa_fencing_id' => ['nullable', 'string', 'max:30'],
             'home_zip' => ['nullable', 'string', 'max:10'],
             'home_club_id' => ['nullable', 'exists:clubs,id'],
-            'goal' => ['nullable', 'in:'.implode(',', array_keys(config('fencing.goals')))],
             'drive_radius_miles' => ['required', 'integer', 'between:50,4000'],
             'primary_weapon' => ['nullable', 'in:'.implode(',', self::WEAPONS)],
         ]);
@@ -165,7 +164,6 @@ class FencerController extends Controller
             'weaponsList' => self::WEAPONS,
             'ageGroups' => self::AGE_GROUPS,
             'ratings' => self::RATINGS,
-            'goals' => config('fencing.goals'),
             'currentWeapons' => $fencer->exists ? $fencer->weapons->keyBy('weapon') : collect(),
         ];
     }

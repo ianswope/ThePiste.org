@@ -27,7 +27,18 @@ class SeasonBuilder extends Component
     /** @var array<int, float|null> tournament id => estimated trip cost */
     public array $costs = [];
 
-    public ?string $goal = null;
+    // add-goal form
+    public string $goalType = '';
+
+    public string $goalWeapon = '';
+
+    public string $goalRating = 'B';
+
+    public string $goalTarget = 'jo';
+
+    public string $goalCategory = '';
+
+    public ?int $goalEvents = 8;
 
     public function mount()
     {
@@ -42,7 +53,7 @@ class SeasonBuilder extends Component
         if (! $this->plan->share_slug) {
             $this->plan->update(['share_slug' => Str::random(24)]);
         }
-        $this->goal = $this->fencer->goal;
+        $this->goalWeapon = $this->fencer->weapon;
         $this->selected = $this->plan->items()->pluck('tournament_id')->map(fn ($id) => (int) $id)->all();
         $this->costs = $this->plan->items()->pluck('est_cost', 'tournament_id')
             ->map(fn ($c) => $c !== null ? (float) $c : null)->all();
@@ -78,9 +89,47 @@ class SeasonBuilder extends Component
         }
     }
 
-    public function updatedGoal(?string $value): void
+    public function addGoal(): void
     {
-        $this->fencer->update(['goal' => $value ?: null]);
+        $this->validate([
+            'goalType' => ['required', 'in:rating,qualify,standing,develop'],
+            'goalWeapon' => ['nullable', 'in:foil,epee,sabre'],
+            'goalRating' => ['required_if:goalType,rating', 'in:E,D,C,B,A'],
+            'goalTarget' => ['required_if:goalType,qualify', 'in:'.implode(',', array_keys(config('fencing.qualify_targets')))],
+            'goalCategory' => ['nullable', 'string', 'max:6'],
+            'goalEvents' => ['required_if:goalType,develop', 'nullable', 'integer', 'between:1,60'],
+        ]);
+
+        $params = match ($this->goalType) {
+            'rating' => ['target_rating' => $this->goalRating],
+            'qualify' => ['target' => $this->goalTarget],
+            'standing' => ['category' => $this->goalCategory ?: null],
+            'develop' => ['target_events' => $this->goalEvents],
+        };
+
+        $weapon = $this->goalType === 'develop' ? null : ($this->goalWeapon ?: $this->fencer->weapon);
+
+        // Same type + weapon replaces (one rating goal per weapon, etc.).
+        $this->fencer->goals()->active()
+            ->where('type', $this->goalType)
+            ->where('weapon', $weapon)
+            ->delete();
+
+        $this->fencer->goals()->create([
+            'type' => $this->goalType,
+            'weapon' => $weapon,
+            'params' => $params,
+            'status' => 'active',
+        ]);
+
+        $this->goalType = '';
+        unset($this->rows);
+    }
+
+    public function removeGoal(int $goalId): void
+    {
+        $this->fencer->goals()->whereKey($goalId)->delete();
+        unset($this->rows);
     }
 
     public function updatedCosts($value, $key): void
@@ -124,7 +173,11 @@ class SeasonBuilder extends Component
             ],
             'selectedIds' => $sel,
             'clashIds' => $clashes,
-            'goals' => config('fencing.goals'),
+            'goals' => $this->fencer->goals()->active()->orderBy('created_at')->get(),
+            'goalTypes' => config('fencing.goal_types'),
+            'qualifyTargets' => collect(config('fencing.qualify_targets'))->map(fn ($t) => $t['label']),
+            'weaponsList' => $this->fencer->weapons->pluck('weapon')->all() ?: [$this->fencer->weapon],
+            'categories' => $this->fencer->eligibleCategories(),
         ]);
     }
 }

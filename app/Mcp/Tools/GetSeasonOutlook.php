@@ -48,6 +48,7 @@ class GetSeasonOutlook extends Tool
             'distance_miles' => $r['distance'] !== null ? round($r['distance']) : null,
             'travel' => $r['distance'] === null ? null : ($r['driveable'] ? 'drive' : 'fly'),
             'eligible_categories' => $r['eligible'],
+            'advances_goals' => array_map(fn ($a) => ['goal' => $a['label'], 'why' => $a['why']], $r['advances']),
             'conflicts_with' => $r['conflict_with'],
             'in_plan' => in_array($r['tournament']->id, $inPlan, true),
             'note' => $r['note'],

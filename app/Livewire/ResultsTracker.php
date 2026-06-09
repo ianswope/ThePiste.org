@@ -80,6 +80,43 @@ class ResultsTracker extends Component
         $this->fencer->results()->whereKey($resultId)->delete();
     }
 
+    /** Per-goal progress derived from logged results. Path-aware, never claims "qualified". */
+    private function goalCards($seasonResults): array
+    {
+        return $this->fencer->goals()->active()->orderBy('created_at')->get()->map(function ($g) use ($seasonResults) {
+            $card = ['id' => $g->id, 'type' => $g->type, 'label' => $g->label()];
+
+            return $card + match ($g->type) {
+                'rating' => [
+                    'progress' => $this->fencer->ratingProgress(),
+                    'detail' => 'Currently '.$this->fencer->rating.' · target '.$g->param('target_rating'),
+                ],
+                'qualify' => [
+                    'progress' => null,
+                    'detail' => ($n = $seasonResults->filter(function ($r) use ($g) {
+                        $circuits = $r->tournament?->circuits ?? [];
+
+                        return (bool) array_intersect(
+                            config('fencing.qualify_targets.'.$g->param('target').'.path_circuits', []),
+                            $circuits
+                        );
+                    })->count()).' path event'.($n === 1 ? '' : 's').' fenced this season',
+                ],
+                'standing' => [
+                    'progress' => null,
+                    'detail' => round($seasonResults
+                        ->filter(fn ($r) => $g->param('category') === null || $r->category === $g->param('category'))
+                        ->sum(fn ($r) => $r->points ?? 0), 1).' points logged'
+                        .($g->param('category') ? ' in '.$g->param('category') : ''),
+                ],
+                'develop' => [
+                    'progress' => min(1.0, $seasonResults->count() / max(1, (int) $g->param('target_events'))),
+                    'detail' => $seasonResults->count().' of '.$g->param('target_events').' events fenced',
+                ],
+            };
+        })->all();
+    }
+
     public function render()
     {
         $results = $this->fencer->results()
@@ -92,6 +129,7 @@ class ResultsTracker extends Component
         );
 
         return view('livewire.results-tracker', [
+            'goalCards' => $this->goalCards($seasonResults),
             'results' => $results,
             'stats' => [
                 'events' => $seasonResults->count(),
@@ -104,7 +142,6 @@ class ResultsTracker extends Component
                 ->mapWithKeys(fn ($t) => [$t->id => $t->starts_on->format('M j').' · '.$t->name]),
             'ladder' => Fencer::RATING_LADDER,
             'progress' => $this->fencer->ratingProgress(),
-            'goals' => config('fencing.goals'),
         ]);
     }
 }

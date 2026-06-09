@@ -19,14 +19,15 @@ class ResultsTrackerTest extends TestCase
         $this->seed(Season2026Seeder::class);
     }
 
-    private function makeFencer(string $rating = 'D', string $goal = 'earn_b'): User
+    private function makeFencer(string $rating = 'D'): User
     {
         $user = User::factory()->create();
         $fencer = $user->fencers()->create([
             'name' => 'Kid', 'weapon' => 'foil', 'age_group' => 'Junior',
-            'rating' => $rating, 'goal' => $goal, 'drive_radius_miles' => 450,
+            'rating' => $rating, 'drive_radius_miles' => 450,
         ]);
         $fencer->weapons()->create(['weapon' => 'foil', 'rating' => $rating, 'is_primary' => true]);
+        $fencer->goals()->create(['type' => 'rating', 'weapon' => 'foil', 'params' => ['target_rating' => 'B']]);
 
         return $user;
     }
@@ -102,14 +103,16 @@ class ResultsTrackerTest extends TestCase
 
     public function test_rating_progress_meter(): void
     {
-        $user = $this->makeFencer('C', 'earn_b');
+        $user = $this->makeFencer('C');
         $fencer = $user->fencers()->first();
 
         // U(0) E(1) D(2) C(3) B(4): C toward B = 3/4
         $this->assertEqualsWithDelta(0.75, $fencer->ratingProgress(), 0.001);
         $this->assertSame('B', $fencer->targetRating());
 
-        $fencer->update(['goal' => 'regional_standing']);
+        // No rating goal, no ladder target.
+        $fencer->goals()->where('type', 'rating')->delete();
+        $fencer->goals()->create(['type' => 'standing', 'weapon' => 'foil', 'params' => ['category' => null]]);
         $this->assertNull($fencer->fresh()->ratingProgress());
     }
 

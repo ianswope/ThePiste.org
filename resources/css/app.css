@@ -224,6 +224,10 @@ a { color: inherit; }
 .chip.nac-hl { background: var(--red-ink); color: #fff; }
 .chip.dim    { opacity: .6; }
 
+/* goal advances */
+.adv { font-family: 'Martian Mono', monospace; font-size: 10.5px; font-weight: 700; color: var(--green-ink); white-space: nowrap; cursor: help; }
+.advrow { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 11px; }
+
 .cnote { font-size: 13.5px; color: var(--ink-soft); line-height: 1.6; background: var(--surface-2); border-radius: 9px; padding: 10px 13px; margin-top: auto; }
 .cconflict { display: block; margin-top: 7px; padding-top: 7px; border-top: 1px dashed var(--border); color: var(--red-ink); font-weight: 700; font-size: 12.5px; }
 
@@ -347,11 +351,21 @@ a { color: inherit; }
 .builder-head h1 { font-size: clamp(23px,3.6vw,32px); font-weight: 800; font-variation-settings: 'wdth' 112; text-transform: uppercase; letter-spacing: .01em; margin: 0 0 6px; }
 .builder-head p { color: var(--muted); margin: 0 0 20px; max-width: 60ch; }
 
-.goalbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 13px 15px; margin-bottom: 28px; box-shadow: var(--shadow); }
-.goalbar label { font-size: 13px; color: var(--ink-soft); font-weight: 700; }
-.goalbar select { font: inherit; font-size: 14.5px; border: 1.5px solid var(--line); border-radius: 9px; padding: 8px 12px; background: var(--surface); color: var(--ink); }
-.goalbar select:focus { outline: none; border-color: var(--green-ink); box-shadow: 0 0 0 3px rgba(45,185,94,.18); }
-.goalbar .hint { color: var(--muted); font-size: 13px; }
+.goalpanel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px 17px; margin-bottom: 28px; box-shadow: var(--shadow); }
+.goalpanel-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.goalpanel .gp-title { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; font-weight: 800; font-variation-settings: 'wdth' 95; }
+.goalpanel .hint { color: var(--muted); font-size: 13px; }
+.goalchips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.goalchip {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13.5px; font-weight: 700; color: var(--green-ink);
+    background: rgba(45,185,94,.08); border: 1.5px solid rgba(45,185,94,.35);
+    border-radius: 999px; padding: 6px 8px 6px 14px;
+}
+.goalchip .gx { border: 0; background: transparent; color: var(--green-ink); font-size: 16px; line-height: 1; cursor: pointer; padding: 2px 6px; border-radius: 999px; }
+.goalchip .gx:hover { background: rgba(45,185,94,.18); }
+.goalform { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.goalform .input { width: auto; font-size: 14px; padding: 8px 11px; }
 
 .bsection { margin-bottom: 30px; }
 .bsection > h2 { font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); font-weight: 800; font-variation-settings: 'wdth' 95; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
@@ -412,6 +426,12 @@ a { color: inherit; }
 .lrung.current { background: var(--green-ink); border-color: var(--green-ink); color: #fff; box-shadow: var(--shadow-md); }
 .lrung.target  { border-color: var(--red-ink); border-style: dashed; }
 .lrung.target.current { border-style: solid; }
+
+.goalrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.goalrow:last-of-type { margin-bottom: 14px; }
+.goalrow .gname { font-weight: 700; }
+.goalrow .gdetail { color: var(--muted); font-size: 13px; }
+.goalrow .gmini { flex: 1 0 120px; max-width: 180px; margin-left: auto; }
 
 .progressbar { height: 8px; border-radius: 999px; background: var(--inset); border: 1px solid var(--border); overflow: hidden; }
 .progressbar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--green-ink), var(--green)); transition: width .4s ease; }

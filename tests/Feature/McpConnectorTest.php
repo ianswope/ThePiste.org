@@ -31,10 +31,11 @@ class McpConnectorTest extends TestCase
         $user = User::factory()->create();
         $fencer = $user->fencers()->create([
             'name' => 'Kid', 'weapon' => 'foil', 'age_group' => 'Junior',
-            'rating' => 'C', 'goal' => 'earn_b', 'drive_radius_miles' => 450,
+            'rating' => 'C', 'drive_radius_miles' => 450,
             'home_lat' => 41.808, 'home_lng' => -88.011,
         ]);
         $fencer->weapons()->create(['weapon' => 'foil', 'rating' => 'C', 'is_primary' => true]);
+        $fencer->goals()->create(['type' => 'rating', 'weapon' => 'foil', 'params' => ['target_rating' => 'B']]);
 
         return $user;
     }
@@ -51,19 +52,21 @@ class McpConnectorTest extends TestCase
             ->tool(ListFencers::class)
             ->assertOk()
             ->assertSee('Kid')
-            ->assertSee('Earn a B rating');
+            ->assertSee('Earn a B in foil');
     }
 
-    public function test_set_goal_updates_the_fencer(): void
+    public function test_set_goal_adds_a_structured_goal(): void
     {
         $user = $this->makeUser();
 
         ThePisteServer::actingAs($user)
-            ->tool(SetGoal::class, ['goal' => 'qualify_jo'])
+            ->tool(SetGoal::class, ['type' => 'qualify', 'target' => 'jo'])
             ->assertOk()
             ->assertSee('Qualify for Junior Olympics');
 
-        $this->assertSame('qualify_jo', $user->fencers()->first()->goal);
+        $goals = $user->fencers()->first()->activeGoals();
+        $this->assertCount(2, $goals); // rating goal from setup + the new qualify goal
+        $this->assertSame('jo', $goals->firstWhere('type', 'qualify')->param('target'));
     }
 
     public function test_outlook_returns_tiers_and_plan_membership(): void

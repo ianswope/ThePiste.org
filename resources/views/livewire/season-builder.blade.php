@@ -5,15 +5,64 @@
         <p>Your anchors are locked in. Add the events that fit the goal and the budget. The plan saves as you go.</p>
     </div>
 
-    <div class="goalbar">
-        <label for="goal">Working toward</label>
-        <select id="goal" wire:model.live="goal">
-            <option value="">Not sure yet</option>
-            @foreach ($goals as $key => $label)
-                <option value="{{ $key }}">{{ $label }}</option>
-            @endforeach
-        </select>
-        <span class="hint">The goal drives which events are recommended.</span>
+    <div class="goalpanel">
+        <div class="goalpanel-head">
+            <span class="gp-title">Season goals</span>
+            <span class="hint">Events that advance a goal get marked <span class="adv">▸</span> across the calendar and win weekend ties.</span>
+        </div>
+        <div class="goalchips">
+            @forelse ($goals as $g)
+                <span class="goalchip" wire:key="goal-{{ $g->id }}">
+                    {{ $g->label() }}
+                    <button type="button" class="gx" wire:click="removeGoal({{ $g->id }})" aria-label="Remove goal">&times;</button>
+                </span>
+            @empty
+                <span class="hint">No goals yet. Add one and the whole calendar starts pointing at it.</span>
+            @endforelse
+        </div>
+
+        @if ($goalType === '')
+            <button type="button" class="btoggle" wire:click="$set('goalType', 'rating')">+ Add a goal</button>
+        @else
+            <div class="goalform">
+                <select class="input" wire:model.live="goalType" aria-label="Goal type">
+                    @foreach ($goalTypes as $key => $label)
+                        <option value="{{ $key }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+
+                @if ($goalType === 'rating')
+                    <select class="input" wire:model="goalRating" aria-label="Target rating">
+                        @foreach (['E', 'D', 'C', 'B', 'A'] as $r)
+                            <option value="{{ $r }}">{{ $r }}</option>
+                        @endforeach
+                    </select>
+                    <select class="input" wire:model="goalWeapon" aria-label="Weapon">
+                        @foreach ($weaponsList as $w)
+                            <option value="{{ $w }}">{{ ucfirst($w) }}</option>
+                        @endforeach
+                    </select>
+                @elseif ($goalType === 'qualify')
+                    <select class="input" wire:model="goalTarget" aria-label="Championship">
+                        @foreach ($qualifyTargets as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                @elseif ($goalType === 'standing')
+                    <select class="input" wire:model="goalCategory" aria-label="Category">
+                        <option value="">Any category</option>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat }}">{{ $cat }}</option>
+                        @endforeach
+                    </select>
+                @elseif ($goalType === 'develop')
+                    <span class="costwrap"><input class="input costinput" type="number" min="1" max="60" wire:model="goalEvents" aria-label="Number of events"> events</span>
+                @endif
+
+                <button type="button" class="btn btn-primary" style="padding:9px 15px;font-size:13.5px;" wire:click="addGoal">Add</button>
+                <button type="button" class="btoggle" wire:click="$set('goalType', '')">Cancel</button>
+            </div>
+        @endif
     </div>
 
     @php
@@ -45,6 +94,9 @@
                                 <span>{{ $t->city }}, {{ $t->state }}</span>
                                 @if ($r['distance'])<span>{{ round($r['distance']) }} mi · {{ $r['driveable'] ? 'drive' : 'fly' }}</span>@endif
                                 @if (! empty($r['eligible']))<span>{{ implode(', ', $r['eligible']) }}</span>@endif
+                                @foreach ($r['advances'] as $a)
+                                    <span class="adv" title="{{ $a['why'] }}">▸ {{ $a['label'] }}</span>
+                                @endforeach
                                 @if ($clash)
                                     <span class="conflict">⚠ Both this and {{ $r['conflict_with'] }} are in the plan — same weekend, pick one</span>
                                 @elseif ($r['conflict_with'])

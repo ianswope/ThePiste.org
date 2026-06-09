@@ -14,6 +14,8 @@ use Illuminate\Support\Collection;
  */
 class TierService
 {
+    public function __construct(private GoalScorer $goalScorer) {}
+
     /**
      * @return Collection<int, array> one row per tournament, decorated with tier data,
      *                                ordered by date. Ineligible events are included
@@ -25,13 +27,14 @@ class TierService
         $fencerRegion = $fencer->region();
         $radius = $fencer->driveRadius();
         $threshold = config('fencing.multi_category_threshold');
+        $goals = $fencer->activeGoals();
 
         $rows = $tournaments
             // FIE events are opt-in per fencer.
             ->reject(fn (Tournament $t) => str_starts_with((string) $t->level, 'fie') && ! $fencer->include_fie)
             ->sortBy(fn (Tournament $t) => $t->starts_on->timestamp)
             ->values()
-            ->map(function (Tournament $t) use ($fencer, $eligibleCats, $fencerRegion, $radius, $threshold) {
+            ->map(function (Tournament $t) use ($fencer, $eligibleCats, $fencerRegion, $radius, $threshold, $goals) {
                 $eligible = array_values(array_intersect($t->contested_events ?? [], $eligibleCats));
                 $eligibleCount = count($eligible);
                 $distance = $this->distanceMiles($fencer->home_lat, $fencer->home_lng, $t->lat, $t->lng);
@@ -40,6 +43,14 @@ class TierService
                 $isHome = $t->host_club_id !== null && $t->host_club_id === $fencer->home_club_id;
 
                 $tier = $this->baseTier($t, $eligibleCount, $driveable, $inRegion, $isHome, $threshold);
+
+                $advances = $tier === 'ineligible' ? [] : $this->goalScorer->advances($goals, $t, [
+                    'eligible' => $eligible,
+                    'in_region' => $inRegion,
+                    'driveable' => $driveable,
+                    'distance' => $distance,
+                    'tier' => $tier,
+                ]);
 
                 return [
                     'tournament' => $t,
@@ -53,6 +64,8 @@ class TierService
                     'tier' => $tier,
                     'non_negotiable' => in_array($tier, ['nac', 'home'], true)
                         || ($tier === 'priority' && $eligibleCount >= $threshold),
+                    'advances' => $advances,
+                    'goal_score' => round(array_sum(array_column($advances, 'weight')), 2),
                     'conflict_with' => null,
                     'note' => $t->curated_note ?: $this->generatedNote($t, $eligible, $distance, $driveable, $inRegion, $tier),
                 ];
@@ -111,7 +124,8 @@ class TierService
                 continue;
             }
 
-            $winner = $group->sortByDesc(fn ($r) => $ranks[$r['tier']] ?? 0)->first();
+            // Tier wins the weekend; goal contribution breaks ties within a tier.
+            $winner = $group->sortByDesc(fn ($r) => (($ranks[$r['tier']] ?? 0) * 1000) + $r['goal_score'])->first();
 
             foreach ($group as $row) {
                 if ($row['tournament']->id === $winner['tournament']->id) {
