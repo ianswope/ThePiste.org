@@ -35,6 +35,11 @@ class Fencer extends Model
         return $this->hasMany(FencerWeapon::class);
     }
 
+    public function seasonPlans(): HasMany
+    {
+        return $this->hasMany(SeasonPlan::class);
+    }
+
     /** The fencer's primary weapon row (falls back to first). */
     public function primaryWeapon(): ?FencerWeapon
     {

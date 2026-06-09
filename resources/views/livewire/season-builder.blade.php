@@ -1,0 +1,69 @@
+<div class="builder">
+    <div class="builder-head">
+        <div class="eye">Season builder · {{ $fencer->name }}</div>
+        <h1>Build {{ $fencer->name }}'s season</h1>
+        <p>Your anchors are locked in. Add the events that fit the goal and the budget. The plan saves as you go.</p>
+    </div>
+
+    <div class="goalbar">
+        <label for="goal">Working toward</label>
+        <select id="goal" wire:model.live="goal">
+            <option value="">Not sure yet</option>
+            @foreach ($goals as $key => $label)
+                <option value="{{ $key }}">{{ $label }}</option>
+            @endforeach
+        </select>
+        <span class="hint">The goal drives which events are recommended.</span>
+    </div>
+
+    @php
+        $meta = [
+            'anchors' => ['Anchors', 'NACs and home-club events you should not miss. Pre-locked.'],
+            'value' => ['Best value', 'In-region, multi-category, or driveable. Strong points per dollar.'],
+            'optional' => ['Optional fly trips', 'Worth it when momentum or points call for it.'],
+            'rest' => ['Lower priority', 'Long, single-category, or out of region.'],
+        ];
+    @endphp
+
+    @foreach ($meta as $key => [$heading, $desc])
+        @php $group = $sections[$key]; @endphp
+        @if ($group->isNotEmpty())
+            <div class="bsection">
+                <h2>{{ $heading }} <span class="cnt">{{ $group->count() }}</span></h2>
+                <p class="desc">{{ $desc }}</p>
+                @foreach ($group as $r)
+                    @php $t = $r['tournament']; $sel = in_array($t->id, $selectedIds, true); @endphp
+                    <div class="brow t-{{ $r['tier'] }} {{ $sel ? 'selected' : '' }}" wire:key="row-{{ $t->id }}">
+                        <div class="bmain">
+                            <div class="bdate">{{ $t->starts_on->format('M j') }} · {{ $t->region }}</div>
+                            <div class="bname">{{ $t->name }}</div>
+                            <div class="bmeta">
+                                <span>📍 {{ $t->city }}, {{ $t->state }}</span>
+                                @if ($r['distance'])<span>{{ round($r['distance']) }} mi · {{ $r['driveable'] ? 'drive' : 'fly' }}</span>@endif
+                                @if (! empty($r['eligible']))<span>{{ implode(', ', $r['eligible']) }}</span>@endif
+                                @if ($r['conflict_with'])<span class="conflict">⚠ clashes with {{ $r['conflict_with'] }}</span>@endif
+                            </div>
+                        </div>
+                        <button class="btoggle" wire:click="toggle({{ $t->id }})" wire:loading.attr="disabled">
+                            {{ $sel ? '✓ In plan' : '+ Add' }}
+                        </button>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    @endforeach
+
+    <div class="bsummary">
+        <div class="inner">
+            <div class="nums">
+                <span class="n">{{ $tally['count'] }}<small>Events</small></span>
+                <span class="n">{{ $tally['nacs'] }}<small>NACs</small></span>
+                <span class="n">{{ $tally['drives'] }}<small>Drives</small></span>
+                <span class="n">{{ $tally['flights'] }}<small>Flights</small></span>
+            </div>
+            <div class="grow"></div>
+            <a class="btn btn-ghost" href="{{ route('calendar') }}">View calendar</a>
+            <span class="saved">Saved automatically</span>
+        </div>
+    </div>
+</div>

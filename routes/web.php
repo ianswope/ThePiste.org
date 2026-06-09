@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\FencerController;
+use App\Livewire\SeasonBuilder;
 use Illuminate\Support\Facades\Route;
 
 // Guests get the landing page; signed-in users go straight to their season.
@@ -14,6 +15,7 @@ Route::get('/demo', [CalendarController::class, 'demo'])->name('demo');
 
 Route::middleware('auth')->group(function () {
     Route::get('/season', [CalendarController::class, 'index'])->name('calendar');
+    Route::get('/season/build', SeasonBuilder::class)->name('season.build');
 
     Route::get('/fencers/create', [FencerController::class, 'create'])->name('fencers.create');
     Route::post('/fencers', [FencerController::class, 'store'])->name('fencers.store');

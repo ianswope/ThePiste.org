@@ -346,3 +346,46 @@ a { color: inherit; }
 /* sample-calendar banner */
 .demobanner { background: var(--ink); color: #fff; text-align: center; font-size: 13.5px; padding: 10px 16px; display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; }
 .demobanner a { color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── SEASON BUILDER ──────────────────────────────────────────────────── */
+.builder { max-width: 920px; margin: 0 auto; padding: clamp(22px,4vw,40px) var(--pad) 120px; animation: fade .5s ease both; }
+.builder-head .eye { font-family: 'Space Mono', monospace; font-size: 11.5px; letter-spacing: .26em; text-transform: uppercase; color: var(--green-ink); margin-bottom: 10px; }
+.builder-head h1 { font-size: clamp(25px,4vw,36px); letter-spacing: -.02em; margin: 0 0 6px; }
+.builder-head p { color: var(--muted); margin: 0 0 20px; max-width: 60ch; }
+
+.goalbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 13px 15px; margin-bottom: 28px; box-shadow: var(--shadow); }
+.goalbar label { font-size: 13px; color: var(--ink-soft); font-weight: 600; }
+.goalbar select { font: inherit; font-size: 14.5px; border: 1.5px solid var(--line); border-radius: 9px; padding: 8px 12px; background: var(--surface); color: var(--ink); }
+.goalbar select:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,163,74,.15); }
+.goalbar .hint { color: var(--muted); font-size: 13px; }
+
+.bsection { margin-bottom: 28px; }
+.bsection > h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+.bsection > h2 .cnt { color: var(--faint); font-family: 'Space Mono', monospace; }
+.bsection > .desc { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+
+.brow { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 13px 15px 13px 18px; margin-bottom: 9px; position: relative; overflow: hidden; transition: border-color .15s, box-shadow .15s; }
+.brow::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--slate); }
+.brow.t-nac::before { background: var(--red); }
+.brow.t-home::before { background: var(--green); }
+.brow.t-priority::before { background: var(--amber); }
+.brow.t-drive::before { background: var(--steel); }
+.brow.t-fly::before { background: var(--violet); }
+.brow.t-skip::before { background: var(--slate); }
+.brow.selected { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
+.brow .bmain { min-width: 0; }
+.brow .bdate { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
+.brow .bname { font-size: 15.5px; font-weight: 600; color: var(--ink); margin: 2px 0 4px; }
+.brow .bmeta { font-size: 12.5px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+.brow .bmeta .conflict { color: var(--red-ink); font-weight: 600; }
+.btoggle { white-space: nowrap; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 600; padding: 9px 15px; cursor: pointer; transition: all .15s; }
+.btoggle:hover { border-color: var(--green); }
+.brow.selected .btoggle { background: var(--green); color: #fff; border-color: var(--green); }
+
+.bsummary { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: rgba(255,255,255,.93); backdrop-filter: saturate(150%) blur(12px); border-top: 1px solid var(--border); }
+.bsummary .inner { max-width: 920px; margin: 0 auto; padding: 12px var(--pad); display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.bsummary .nums { display: flex; gap: 20px; flex-wrap: wrap; }
+.bsummary .n { font-family: 'Space Mono', monospace; font-size: 19px; font-weight: 700; color: var(--ink); line-height: 1; }
+.bsummary .n small { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-top: 5px; }
+.bsummary .grow { margin-left: auto; }
+.bsummary .saved { color: var(--green-ink); font-size: 13px; font-weight: 600; }
