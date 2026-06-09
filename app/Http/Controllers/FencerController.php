@@ -101,6 +101,8 @@ class FencerController extends Controller
             'primary_weapon' => ['nullable', 'in:'.implode(',', self::WEAPONS)],
         ]);
 
+        $data['include_fie'] = $request->boolean('include_fie');
+
         if (empty($this->competedWeapons($request))) {
             throw ValidationException::withMessages(['weapons' => 'Pick at least one weapon.']);
         }

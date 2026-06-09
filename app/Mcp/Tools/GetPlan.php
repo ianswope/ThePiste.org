@@ -26,20 +26,23 @@ class GetPlan extends Tool
     {
         $fencer = $this->fencer($request);
         $season = $this->activeSeason();
-        $planIds = $this->plan($fencer)->items()->pluck('tournament_id')->all();
+        $plan = $this->plan($fencer);
+        $costs = $plan->items()->pluck('est_cost', 'tournament_id');
 
         $rows = $tiers->evaluate($fencer, $season->tournaments()->with('hostClub')->get())
-            ->filter(fn ($r) => in_array($r['tournament']->id, $planIds, true))
+            ->filter(fn ($r) => $costs->has($r['tournament']->id))
             ->values();
 
         return Response::json([
             'fencer' => $fencer->name,
             'season' => $season->name,
+            'share_url' => $plan->share_slug ? route('plan.share', $plan->share_slug) : null,
             'tallies' => [
                 'events' => $rows->count(),
                 'nacs' => $rows->where('is_nac', true)->count(),
                 'drives' => $rows->filter(fn ($r) => $r['driveable'])->count(),
                 'flights' => $rows->filter(fn ($r) => ! $r['driveable'] && $r['distance'] !== null)->count(),
+                'est_cost' => round($costs->sum(fn ($c) => $c ?? 0)),
             ],
             'events' => $rows->map(fn ($r) => [
                 'tournament_id' => $r['tournament']->id,

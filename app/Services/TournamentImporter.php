@@ -23,9 +23,12 @@ class TournamentImporter
         // optional: stable id at the source (set by the AskFRED sync) — rows
         // matching an existing external_id update in place even if dates moved
         'external_id',
+        // optional: sanctioning level (regional|national|fie_cadet|fie_junior|fie_senior)
+        // and ISO country code; default regional / US
+        'level', 'country',
     ];
 
-    private const REQUIRED = ['name', 'starts_on', 'ends_on', 'city', 'state', 'region', 'contested_events'];
+    private const REQUIRED = ['name', 'starts_on', 'ends_on', 'city', 'region', 'contested_events'];
 
     public function __construct(private PlaceGeocoder $geocoder) {}
 
@@ -108,9 +111,10 @@ class TournamentImporter
             throw new \InvalidArgumentException('ends_on is before starts_on');
         }
 
-        $state = strtoupper($row['state']);
-        if (strlen($state) !== 2) {
-            throw new \InvalidArgumentException('state must be a 2-letter code');
+        $country = strtoupper($row['country'] ?? '') ?: 'US';
+        $state = strtoupper($row['state'] ?? '');
+        if ($country === 'US' && strlen($state) !== 2) {
+            throw new \InvalidArgumentException('state must be a 2-letter code for US events');
         }
 
         $events = $this->splitList($row['contested_events']);
@@ -120,7 +124,8 @@ class TournamentImporter
 
         $lat = is_numeric($row['lat'] ?? '') ? (float) $row['lat'] : null;
         $lng = is_numeric($row['lng'] ?? '') ? (float) $row['lng'] : null;
-        if ($lat === null || $lng === null) {
+        // The geocoder is US-only; international rows supply lat/lng in the CSV.
+        if (($lat === null || $lng === null) && $country === 'US') {
             if ($geo = $this->geocoder->lookup($row['city'], $state)) {
                 [$lat, $lng] = [$geo['lat'], $geo['lng']];
                 $geocoded++;
@@ -149,11 +154,14 @@ class TournamentImporter
             'starts_on' => $starts,
             'ends_on' => $ends,
             'city' => $row['city'],
-            'state' => $state,
+            'state' => $state ?: null,
             'region' => strtoupper($row['region']),
             'lat' => $lat,
             'lng' => $lng,
             'is_nac' => $this->truthy($row['is_nac'] ?? ''),
+            'level' => in_array($row['level'] ?? '', ['regional', 'national', 'fie_cadet', 'fie_junior', 'fie_senior'], true)
+                ? $row['level'] : 'regional',
+            'country' => $country,
             'circuits' => $this->splitList($row['circuits'] ?? '') ?: null,
             'contested_events' => $events,
             'curated_note' => ($row['curated_note'] ?? '') !== '' ? $row['curated_note'] : null,

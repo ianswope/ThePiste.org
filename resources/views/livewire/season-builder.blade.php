@@ -32,21 +32,35 @@
                 <h2>{{ $heading }} <span class="cnt">{{ $group->count() }}</span></h2>
                 <p class="desc">{{ $desc }}</p>
                 @foreach ($group as $r)
-                    @php $t = $r['tournament']; $sel = in_array($t->id, $selectedIds, true); @endphp
-                    <div class="brow t-{{ $r['tier'] }} {{ $sel ? 'selected' : '' }}" wire:key="row-{{ $t->id }}">
+                    @php
+                        $t = $r['tournament'];
+                        $sel = in_array($t->id, $selectedIds, true);
+                        $clash = in_array($t->id, $clashIds, true);
+                    @endphp
+                    <div class="brow t-{{ $r['tier'] }} {{ $sel ? 'selected' : '' }} {{ $clash ? 'clashing' : '' }}" wire:key="row-{{ $t->id }}">
                         <div class="bmain">
-                            <div class="bdate">{{ $t->starts_on->format('M j') }} · {{ $t->region }}</div>
+                            <div class="bdate">{{ $t->starts_on->format('M j') }} · {{ $t->region }}{{ $t->country !== 'US' ? ' · '.$t->country : '' }}</div>
                             <div class="bname">{{ $t->name }}</div>
                             <div class="bmeta">
                                 <span>📍 {{ $t->city }}, {{ $t->state }}</span>
                                 @if ($r['distance'])<span>{{ round($r['distance']) }} mi · {{ $r['driveable'] ? 'drive' : 'fly' }}</span>@endif
                                 @if (! empty($r['eligible']))<span>{{ implode(', ', $r['eligible']) }}</span>@endif
-                                @if ($r['conflict_with'])<span class="conflict">⚠ clashes with {{ $r['conflict_with'] }}</span>@endif
+                                @if ($clash)
+                                    <span class="conflict">⚠ Both this and {{ $r['conflict_with'] }} are in the plan — same weekend, pick one</span>
+                                @elseif ($r['conflict_with'])
+                                    <span class="conflict">⚠ clashes with {{ $r['conflict_with'] }}</span>
+                                @endif
                             </div>
                         </div>
-                        <button class="btoggle" wire:click="toggle({{ $t->id }})" wire:loading.attr="disabled">
-                            {{ $sel ? '✓ In plan' : '+ Add' }}
-                        </button>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            @if ($sel)
+                                <span class="costwrap">$<input class="input costinput" type="number" min="0" step="25"
+                                    wire:model.blur="costs.{{ $t->id }}" placeholder="cost"></span>
+                            @endif
+                            <button class="btoggle" wire:click="toggle({{ $t->id }})" wire:loading.attr="disabled">
+                                {{ $sel ? '✓ In plan' : '+ Add' }}
+                            </button>
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -60,9 +74,14 @@
                 <span class="n">{{ $tally['nacs'] }}<small>NACs</small></span>
                 <span class="n">{{ $tally['drives'] }}<small>Drives</small></span>
                 <span class="n">{{ $tally['flights'] }}<small>Flights</small></span>
+                <span class="n">{{ $tally['est_cost'] ? '$'.number_format($tally['est_cost']) : '—' }}<small>Budget</small></span>
+                @if (count($clashIds))
+                    <span class="n" style="color:var(--red-ink);">{{ count($clashIds) }}<small style="color:var(--red-ink);">Clashes</small></span>
+                @endif
             </div>
             <div class="grow"></div>
-            <a class="btn btn-ghost" href="{{ route('calendar') }}">View calendar</a>
+            <a class="btn btn-ghost" href="{{ route('plan.share', $plan->share_slug) }}" target="_blank">Share / export</a>
+            <a class="btn btn-ghost" href="{{ route('calendar') }}">Calendar</a>
             <a class="btn btn-ghost" href="{{ route('season.results') }}">Results</a>
             <span class="saved">Saved automatically</span>
         </div>

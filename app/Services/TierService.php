@@ -27,6 +27,8 @@ class TierService
         $threshold = config('fencing.multi_category_threshold');
 
         $rows = $tournaments
+            // FIE events are opt-in per fencer.
+            ->reject(fn (Tournament $t) => str_starts_with((string) $t->level, 'fie') && ! $fencer->include_fie)
             ->sortBy(fn (Tournament $t) => $t->starts_on->timestamp)
             ->values()
             ->map(function (Tournament $t) use ($fencer, $eligibleCats, $fencerRegion, $radius, $threshold) {
@@ -63,6 +65,10 @@ class TierService
     {
         if ($eligibleCount === 0) {
             return 'ineligible';
+        }
+        // FIE / international events are always fly trips, never auto-anchors.
+        if (str_starts_with((string) $t->level, 'fie')) {
+            return 'fly';
         }
         if ($t->is_nac) {
             return 'nac';

@@ -390,6 +390,13 @@ a { color: inherit; }
 .bsummary .grow { margin-left: auto; }
 .bsummary .saved { color: var(--green-ink); font-size: 13px; font-weight: 600; }
 
+.brow.clashing { border-color: rgba(229,56,74,.5); box-shadow: inset 0 0 0 1px rgba(229,56,74,.4); }
+.costwrap { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); font-size: 13px; }
+.costinput { width: 86px; padding: 7px 9px; font-size: 13.5px; }
+
+/* in-plan marker on the calendar */
+.badge.b-plan { background: var(--green); color: #fff; border-color: var(--green); letter-spacing: .07em; }
+
 /* ── RESULTS & PROGRESS ──────────────────────────────────────────────── */
 .ladder { display: flex; gap: 8px; margin-bottom: 12px; }
 .lrung {

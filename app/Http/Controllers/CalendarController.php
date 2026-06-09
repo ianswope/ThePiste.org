@@ -22,7 +22,9 @@ class CalendarController extends Controller
 
         $fencer = $fencers->firstWhere('id', session('active_fencer_id')) ?? $fencers->first();
 
-        return $this->render($tiers, $fencer, $fencers, isDemo: false);
+        $planIds = $fencer->seasonPlans()->first()?->items()->pluck('tournament_id')->all() ?? [];
+
+        return $this->render($tiers, $fencer, $fencers, isDemo: false, planIds: $planIds);
     }
 
     /** Public sample season driven by the demo fencer. */
@@ -33,7 +35,7 @@ class CalendarController extends Controller
         return $this->render($tiers, $fencer, new EloquentCollection, isDemo: true);
     }
 
-    private function render(TierService $tiers, Fencer $fencer, $fencers, bool $isDemo): View
+    private function render(TierService $tiers, Fencer $fencer, $fencers, bool $isDemo, array $planIds = []): View
     {
         $season = Season::where('is_active', true)->first() ?? Season::firstOrFail();
 
@@ -51,6 +53,6 @@ class CalendarController extends Controller
             'nonneg' => $rows->where('non_negotiable', true)->count(),
         ];
 
-        return view('calendar', compact('season', 'fencer', 'months', 'stats', 'fencers', 'isDemo'));
+        return view('calendar', compact('season', 'fencer', 'months', 'stats', 'fencers', 'isDemo', 'planIds'));
     }
 }

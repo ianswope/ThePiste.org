@@ -91,6 +91,9 @@
 <nav class="filters" aria-label="Calendar filters">
     <span class="fl">Show</span>
     <button class="fb active" data-f="all">All Events</button>
+    @if (count($planIds))
+        <button class="fb" data-f="plan">✓ My Plan</button>
+    @endif
     <button class="fb" data-f="nonneg">🎯 Non-Negotiables</button>
     <button class="fb" data-f="nac">NACs Only</button>
     <button class="fb" data-f="priority">Priority + NAC</button>
@@ -112,16 +115,21 @@
             <div class="cards">
                 @foreach($rows as $r)
                     @php($t = $r['tournament'])
+                    @php($inPlan = in_array($t->id, $planIds, true))
                     <article class="card {{ $r['tier'] }}{{ $r['non_negotiable'] ? ' is-nonneg' : '' }}"
                          style="--d: {{ $loop->index }}"
                          data-tier="{{ $r['tier'] }}"
                          data-nonneg="{{ $r['non_negotiable'] ? 1 : 0 }}"
                          data-nac="{{ $r['is_nac'] ? 1 : 0 }}"
                          data-region="{{ $r['in_region'] ? 1 : 0 }}"
-                         data-home="{{ $r['is_home'] ? 1 : 0 }}">
+                         data-home="{{ $r['is_home'] ? 1 : 0 }}"
+                         data-plan="{{ $inPlan ? 1 : 0 }}">
                         <div class="ct">
                             <span class="cd">{{ $dateRange($t->starts_on, $t->ends_on) }} <span class="reg">· {{ $t->region }}</span></span>
                             <div class="cbadges">
+                                @if($inPlan)
+                                    <span class="badge b-plan">✓ IN PLAN</span>
+                                @endif
                                 @if($r['is_home'])
                                     <span class="badge b-home">⚔ HOME CLUB</span>
                                 @endif

@@ -11,13 +11,14 @@ class Fencer extends Model
     protected $fillable = [
         'user_id', 'home_club_id', 'name', 'gender', 'handedness', 'birth_year',
         'usa_fencing_id', 'weapon', 'age_group', 'rating',
-        'home_zip', 'home_lat', 'home_lng', 'goal', 'drive_radius_miles',
+        'home_zip', 'home_lat', 'home_lng', 'goal', 'include_fie', 'drive_radius_miles',
     ];
 
     protected $casts = [
         'home_lat' => 'float',
         'home_lng' => 'float',
         'drive_radius_miles' => 'integer',
+        'include_fie' => 'boolean',
     ];
 
     public function user(): BelongsTo

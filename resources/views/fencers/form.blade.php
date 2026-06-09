@@ -99,7 +99,7 @@
             <div class="field">
                 <label for="usa_fencing_id">USA Fencing ID <span style="color:var(--faint)">(optional)</span></label>
                 <input class="input" id="usa_fencing_id" name="usa_fencing_id" value="{{ old('usa_fencing_id', $fencer->usa_fencing_id) }}">
-                <p class="help">Stored for now. Assisted import is coming.</p>
+                <p class="help">Find ratings &amp; history on <a href="https://fencingtracker.com" target="_blank" rel="noopener" style="color:var(--green-ink);">FencingTracker</a> or the <a href="https://member.usafencing.org/search/members" target="_blank" rel="noopener" style="color:var(--green-ink);">USA Fencing member search</a>.</p>
             </div>
         </div>
 
@@ -113,6 +113,12 @@
                 @endforeach
             </select>
             <p class="help">The goal drives which events the planner prioritizes.</p>
+        </div>
+        <div class="field full">
+            <label class="checkline">
+                <input type="checkbox" name="include_fie" value="1" @checked(old('include_fie', $fencer->include_fie))>
+                Show FIE international events (World Cups, European circuit) on the calendar
+            </label>
         </div>
 
         <div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap;">

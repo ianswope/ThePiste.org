@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PlanItem extends Model
 {
-    protected $fillable = ['season_plan_id', 'tournament_id', 'status', 'notes'];
+    protected $fillable = ['season_plan_id', 'tournament_id', 'status', 'est_cost', 'notes'];
+
+    protected $casts = ['est_cost' => 'float'];
 
     public function plan(): BelongsTo
     {

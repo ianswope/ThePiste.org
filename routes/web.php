@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\FencerController;
+use App\Http\Controllers\PlanShareController;
 use App\Livewire\ResultsTracker;
 use App\Livewire\SeasonBuilder;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,10 @@ Route::get('/', function () {
 
 // Public sample season (the Farren example), with a sign-up invitation.
 Route::get('/demo', [CalendarController::class, 'demo'])->name('demo');
+
+// Public read-only season plan + calendar feed (unguessable slug).
+Route::get('/p/{slug}.ics', [PlanShareController::class, 'ics'])->name('plan.ics');
+Route::get('/p/{slug}', [PlanShareController::class, 'show'])->name('plan.share');
 
 Route::middleware('auth')->group(function () {
     Route::get('/season', [CalendarController::class, 'index'])->name('calendar');

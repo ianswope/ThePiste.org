@@ -35,6 +35,20 @@ class TournamentResource extends Resource
                     ->helperText('Unique key, e.g. grafa-third-coast-cup-2026-11-06.'),
                 Forms\Components\Toggle::make('is_nac')
                     ->label('NAC / national event'),
+                Forms\Components\Select::make('level')
+                    ->options([
+                        'regional' => 'Regional (USAF)',
+                        'national' => 'National (USAF)',
+                        'fie_cadet' => 'FIE Cadet',
+                        'fie_junior' => 'FIE Junior',
+                        'fie_senior' => 'FIE Senior / World Cup',
+                    ])
+                    ->default('regional')
+                    ->required(),
+                Forms\Components\TextInput::make('country')
+                    ->maxLength(2)
+                    ->default('US')
+                    ->helperText('ISO code, e.g. US, FR, PL.'),
                 Forms\Components\DatePicker::make('starts_on')
                     ->required(),
                 Forms\Components\DatePicker::make('ends_on')
