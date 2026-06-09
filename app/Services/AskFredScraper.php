@@ -96,7 +96,9 @@ class AskFredScraper
                 continue;
             }
 
-            $isNac = (bool) preg_match('/\b(NAC|North American Cup|Junior Olympic|National Championship)/i', $name);
+            // National events only — division/regional "JO Qualifier" events are not NACs.
+            $isNac = preg_match('/\b(NAC|North American Cup|Junior Olympic|National Championship)/i', $name)
+                && ! preg_match('/qualif/i', $name);
             preg_match_all('/\b(ROC|RJCC|RYC|SYC|RCC|RPC)\b/i', $name, $circuits);
 
             $rows[] = [

@@ -24,9 +24,15 @@ class AskFredSyncTest extends TestCase
         $parsed = app(AskFredScraper::class)->parseListing($this->fixture());
 
         $this->assertTrue($parsed['hasNext']);
-        $this->assertCount(1, $parsed['rows']);
+        $this->assertCount(2, $parsed['rows']);
         $this->assertSame(1, $parsed['skipped']['non_us']);        // Richmond BC
         $this->assertSame(1, $parsed['skipped']['no_categories']); // Y8-only
+
+        // A division-level "Junior Olympic Qualifier" is NOT a national event.
+        $qualifier = $parsed['rows'][1];
+        $this->assertSame('CT Division Junior Olympic Qualifiers', $qualifier['name']);
+        $this->assertSame('', $qualifier['is_nac']);
+        $this->assertSame('R3', $qualifier['region']);
 
         $row = $parsed['rows'][0];
         $this->assertSame('Badger Open ROC & RJCC', $row['name']);
@@ -58,9 +64,9 @@ class AskFredSyncTest extends TestCase
         $this->artisan('thepiste:sync-askfred', ['--from' => '2026-08-01'])
             ->assertExitCode(0);
 
-        $this->assertSame(1, Tournament::count());
+        $this->assertSame(2, Tournament::count());
 
-        $t = Tournament::firstOrFail();
+        $t = Tournament::where('name', 'Badger Open ROC & RJCC')->firstOrFail();
         $this->assertSame('Badger Open ROC & RJCC', $t->name);
         $this->assertSame('R2', $t->region);
         $this->assertFalse($t->is_nac);
@@ -70,7 +76,7 @@ class AskFredSyncTest extends TestCase
 
         // Re-running must update in place, not duplicate.
         $this->artisan('thepiste:sync-askfred', ['--from' => '2026-08-01'])->assertExitCode(0);
-        $this->assertSame(1, Tournament::count());
+        $this->assertSame(2, Tournament::count());
     }
 
     public function test_dry_run_writes_nothing(): void
