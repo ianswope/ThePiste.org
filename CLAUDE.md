@@ -29,6 +29,7 @@ ssh root@thepiste.org 'cd /var/www/thepiste && ./deploy.sh'
 - **Public calendar** (`/`) — `CalendarController` → `TierService` → `calendar.blade.php`. Blade + Tailwind + a small vanilla-JS filter (instant, client-side).
 - **Personalization engine** — `app/Services/TierService.php`. Per fencer: eligibility (`config/fencing.php` matrix), haversine drive/fly distance, tier (nac/home/priority/drive/fly/skip), same-weekend conflict flags, generated-or-curated strategic notes. This is the core; the calendar is just its presentation.
 - **Admin** (`/admin`) — Filament v3 panel (gated to `super_admin`/`club_admin` via `User::canAccessPanel`). Manage seasons, clubs, tournaments; CSV import.
+- **Catalog ingestion** — the catalog is global (shared by all users); only admins import. Single path: `app/Services/TournamentCsvImporter.php` (upsert by slug = name + start date, so re-imports update in place; per-row errors; pipe-separated list fields). Filament Tournament list has "Import CSV" + "CSV template" actions. Geocoding: `PlaceGeocoder` (city/state → existing tournaments → `geo_places` cache → Nominatim) and `ZipGeocoder` (profile ZIPs → `zip_codes` cache → zippopotam.us). A future AskFRED auto-sync should feed the same importer path.
 - **Data model** — `seasons`, `clubs`, `tournaments` (catalog); `users` (role: super_admin|club_admin|parent|fencer), `fencers` (managed by a user/parent, optional home club). Results + travel/trips + season plans added with their features.
 
 ## Conventions / writing rules
