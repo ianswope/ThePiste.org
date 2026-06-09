@@ -22,16 +22,16 @@ class CalendarTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('ThePiste');
-        $response->assertSee("Farren's Tournament Calendar", false);
+        $response->assertSee("Farren's Season Calendar", false);
 
         // Catalog content is present.
         $response->assertSee('GRAFA Third Coast Cup RYC/RJCC/ROC');
         $response->assertSee('January NAC + Junior Olympics');
 
-        // Computed tiers render as card classes.
-        $response->assertSee('class="card nac"', false);
-        $response->assertSee('class="card home"', false);
-        $response->assertSee('class="card priority"', false);
+        // Computed tiers render onto the cards.
+        $response->assertSee('data-tier="nac"', false);
+        $response->assertSee('data-tier="home"', false);
+        $response->assertSee('data-tier="priority"', false);
 
         // Conflict detection surfaced in the UI.
         $response->assertSee('ranks higher', false);

@@ -18,7 +18,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ThePiste — {{ $fencer->name }}'s {{ $season->name }} Fencing Calendar</title>
+    <title>ThePiste · {{ $fencer->name }}'s {{ $season->name }} Calendar</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -26,22 +26,28 @@
 </head>
 <body>
 
-<div class="header">
-    <div class="header-eye">USA Fencing · {{ $season->name }} Season</div>
-    <h1><a href="{{ route('calendar') }}" class="brand">ThePiste</a> — {{ $fencer->name }}'s Tournament Calendar</h1>
-    <div class="header-sub">
-        {{ ucfirst($fencer->weapon) }} · {{ $fencer->age_group }} · Rating {{ $fencer->rating }}
-        @if($fencer->homeClub) &nbsp;|&nbsp; {{ $fencer->homeClub->name }} ({{ $fencer->region() }}) @endif
+<header class="header">
+    <div class="header-inner">
+        <div class="header-eye"><a href="{{ route('calendar') }}" class="brand">ThePiste</a> · USA Fencing · {{ $season->name }}</div>
+        <h1>{{ $fencer->name }}'s Season Calendar</h1>
+        <div class="header-meta">
+            <span class="tag">{{ ucfirst($fencer->weapon) }}</span>
+            <span class="tag">{{ $fencer->age_group }}</span>
+            <span class="tag">Rating {{ $fencer->rating }}</span>
+            @if($fencer->homeClub)
+                <span class="tag club">{{ $fencer->homeClub->name }} · {{ $fencer->region() }}</span>
+            @endif
+        </div>
+        <div class="legend">
+            <span class="leg"><span class="dot d-nac"></span> NAC / Non-Negotiable</span>
+            <span class="leg"><span class="dot" style="background:#C9A84C"></span> Priority</span>
+            <span class="leg"><span class="dot d-drive"></span> Drive (≤{{ $fencer->driveRadius() }} mi)</span>
+            <span class="leg"><span class="dot d-fly"></span> Fly Trip</span>
+            <span class="leg"><span class="dot" style="background:#C9A84C;box-shadow:0 0 0 2px #0B1F3A"></span> Home Club</span>
+            <span class="leg"><span class="dot d-skip"></span> Lower Priority</span>
+        </div>
     </div>
-    <div class="legend">
-        <div class="leg"><span class="dot d-nac"></span> NAC / Non-Negotiable</div>
-        <div class="leg"><span class="dot" style="background:#C9A84C"></span> Priority</div>
-        <div class="leg"><span class="dot d-drive"></span> Drive (≤{{ $fencer->driveRadius() }} mi)</div>
-        <div class="leg"><span class="dot d-fly"></span> Fly Trip</div>
-        <div class="leg"><span class="dot" style="background:#C9A84C;border:1.5px solid #0B1F3A"></span> Home Club</div>
-        <div class="leg"><span class="dot d-skip"></span> Lower Priority</div>
-    </div>
-</div>
+</header>
 
 <div class="stats">
     <div class="stat"><span class="sn">{{ $stats['total'] }}</span><span class="sl">Eligible Events</span></div>
@@ -52,8 +58,8 @@
     <div class="stat"><span class="sn">{{ $stats['fly'] }}</span><span class="sl">Fly Trips</span></div>
 </div>
 
-<div class="filters">
-    <span class="fl">Show:</span>
+<nav class="filters" aria-label="Calendar filters">
+    <span class="fl">Show</span>
     <button class="fb active" data-f="all">All Events</button>
     <button class="fb" data-f="nonneg">🎯 Non-Negotiables</button>
     <button class="fb" data-f="nac">NACs Only</button>
@@ -62,12 +68,12 @@
     <button class="fb" data-f="fly">Fly Trips</button>
     <button class="fb" data-f="region">In-Region</button>
     <button class="fb" data-f="home">Home Club</button>
-</div>
+</nav>
 
-<div class="main" id="cal">
+<main class="main" id="cal">
     @foreach($months as $label => $rows)
         @php([$mname, $myear] = explode(' ', $label))
-        <div class="mb" data-month="{{ $label }}">
+        <section class="mb" data-month="{{ $label }}">
             <div class="mh">
                 <span class="mn">{{ strtoupper($mname) }}</span>
                 <span class="my">{{ $myear }}</span>
@@ -76,14 +82,15 @@
             <div class="cards">
                 @foreach($rows as $r)
                     @php($t = $r['tournament'])
-                    <div class="card {{ $r['tier'] }}"
+                    <article class="card {{ $r['tier'] }}{{ $r['non_negotiable'] ? ' is-nonneg' : '' }}"
+                         style="--d: {{ $loop->index }}"
                          data-tier="{{ $r['tier'] }}"
                          data-nonneg="{{ $r['non_negotiable'] ? 1 : 0 }}"
                          data-nac="{{ $r['is_nac'] ? 1 : 0 }}"
                          data-region="{{ $r['in_region'] ? 1 : 0 }}"
                          data-home="{{ $r['is_home'] ? 1 : 0 }}">
                         <div class="ct">
-                            <span class="cd">{{ $dateRange($t->starts_on, $t->ends_on) }} · {{ $t->region }}</span>
+                            <span class="cd">{{ $dateRange($t->starts_on, $t->ends_on) }} <span class="reg">· {{ $t->region }}</span></span>
                             <div class="cbadges">
                                 @if($r['is_home'])
                                     <span class="badge b-home">⚔ HOME CLUB</span>
@@ -102,26 +109,25 @@
                         <div class="cnote">
                             {{ $r['note'] }}
                             @if($r['conflict_with'])
-                                <span class="cconflict">⚠ Same weekend as {{ $r['conflict_with'] }} — that one ranks higher.</span>
+                                <span class="cconflict">⚠ Clashes with {{ $r['conflict_with'] }}, which ranks higher this weekend.</span>
                             @endif
                         </div>
-                    </div>
+                    </article>
                 @endforeach
             </div>
             <div class="no-match">No events match this filter in {{ $label }}.</div>
-        </div>
+        </section>
     @endforeach
 
     <div class="fnote">
         <strong>How these priorities are calculated.</strong><br>
         Every event is scored for <strong>{{ $fencer->name }}</strong> specifically: which categories
-        {{ $fencer->name }} can enter ({{ implode(', ', $fencer->eligibleCategories()) }}), how far each venue is
+        {{ $fencer->name }} can enter ({{ implode(', ', $fencer->eligibleCategories()) }}), how far each venue sits
         from home, whether it falls in {{ $fencer->region() }}, and whether it collides with a bigger event the
         same weekend. NACs and home-club events are always non-negotiable; in-region multi-category weekends become
-        priorities; far-away single-category events drop down the list. Change the profile and the whole calendar
-        re-sorts.
+        priorities; far single-category events drop down the list. Change the profile and the whole calendar re-sorts.
     </div>
-</div>
+</main>
 
 </body>
 </html>
