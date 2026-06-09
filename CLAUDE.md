@@ -32,6 +32,13 @@ ssh root@thepiste.org 'cd /var/www/thepiste && ./deploy.sh'
 - **Catalog ingestion** — the catalog is global (shared by all users); only admins import. Single path: `app/Services/TournamentCsvImporter.php` (upsert by slug = name + start date, so re-imports update in place; per-row errors; pipe-separated list fields). Filament Tournament list has "Import CSV" + "CSV template" actions. Geocoding: `PlaceGeocoder` (city/state → existing tournaments → `geo_places` cache → Nominatim) and `ZipGeocoder` (profile ZIPs → `zip_codes` cache → zippopotam.us). A future AskFRED auto-sync should feed the same importer path.
 - **Data model** — `seasons`, `clubs`, `tournaments` (catalog); `users` (role: super_admin|club_admin|parent|fencer), `fencers` (managed by a user/parent, optional home club). Results + travel/trips + season plans added with their features.
 
+## Ops
+
+- **Backups**: nightly 03:30 cron runs `ops/backup-mysql.sh` (all app DBs on the box, gzip + integrity check, 14-day rotation in `/var/backups/mysql/`). `deploy.sh` takes a pre-migrate safety dump. DO droplet weekly backups are enabled (droplet `PromoEQPWebServer`, id 564359388). Restore: `gunzip < FILE.sql.gz | mysql thepiste`.
+- **Error pages**: branded Laravel views in `resources/views/errors/` (404/403/500/503, self-contained CSS). `public/maintenance.html` is a static "back soon" page nginx serves on 502/503/504 (`error_page` in the vhost, internal-only) — covers php-fpm being down.
+- **Uptime**: DO uptime check "thepiste.org" (id f7a197a7-e9e5-484a-93de-3ed73d18b8ef, us_east + us_west).
+- **Mail is NOT configured** (`MAIL_MAILER=log`) — password resets land in the log. Wire Resend/Postmark before real users.
+
 ## MCP connector
 
 Remote MCP server (laravel/mcp, Streamable HTTP) at `https://thepiste.org/mcp`, authed with a Sanctum bearer token (`User->createToken('claude-desktop')`). Server: `app/Mcp/ThePisteServer.php`; tools in `app/Mcp/Tools/` (list-fencers, set-goal, get-season-outlook, get-plan, manage-plan, log-result, get-progress). Registered in `routes/ai.php`. Claude Desktop connects via the `mcp-remote` bridge with an `Authorization: Bearer` header.
