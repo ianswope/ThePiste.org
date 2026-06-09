@@ -27,10 +27,31 @@
 <body>
 
 <header class="header">
+    <div class="authbar">
+        @auth
+            @if ($fencers->count() > 1)
+                <form method="POST" style="margin:0">@csrf
+                    <select onchange="this.form.action=this.value;this.form.submit()" aria-label="Switch fencer">
+                        @foreach ($fencers as $f)
+                            <option value="{{ route('fencers.select', $f) }}" @selected($f->id === $fencer->id)>{{ $f->name }}</option>
+                        @endforeach
+                    </select>
+                </form>
+            @endif
+            <a class="pill" href="{{ route('fencers.edit', $fencer) }}">Edit profile</a>
+            <a href="{{ route('fencers.create') }}">+ Fencer</a>
+            <form method="POST" action="{{ url('/logout') }}">@csrf<button type="submit">Log out</button></form>
+        @endauth
+        @guest
+            <a href="{{ url('/login') }}">Sign in</a>
+            <a class="pill" href="{{ url('/register') }}">Build your season</a>
+        @endguest
+    </div>
     <div class="header-inner">
         <div class="header-eye"><a href="{{ route('calendar') }}" class="brand">ThePiste</a> · USA Fencing · {{ $season->name }}</div>
         <h1>{{ $fencer->name }}'s Season Calendar</h1>
         <div class="header-meta">
+            @if ($isDemo)<span class="tag club">Sample profile</span>@endif
             <span class="tag">{{ ucfirst($fencer->weapon) }}</span>
             <span class="tag">{{ $fencer->age_group }}</span>
             <span class="tag">Rating {{ $fencer->rating }}</span>

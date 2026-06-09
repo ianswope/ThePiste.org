@@ -5,17 +5,30 @@ namespace App\Http\Controllers;
 use App\Models\Fencer;
 use App\Models\Season;
 use App\Services\TierService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class CalendarController extends Controller
 {
-    public function index(TierService $tiers): View
+    public function index(TierService $tiers): View|RedirectResponse
     {
         $season = Season::where('is_active', true)->first() ?? Season::firstOrFail();
 
-        // v1: drive the calendar from the demo fencer. Phase 2 swaps this for the
-        // signed-in user's selected fencer profile.
-        $fencer = Fencer::with('homeClub')->firstOrFail();
+        $user = auth()->user();
+        $fencers = collect();
+        $isDemo = true;
+
+        if ($user) {
+            $fencers = $user->fencers()->with('homeClub')->get();
+            if ($fencers->isEmpty()) {
+                return redirect()->route('fencers.create');
+            }
+            $fencer = $fencers->firstWhere('id', session('active_fencer_id')) ?? $fencers->first();
+            $isDemo = false;
+        } else {
+            // Logged-out preview runs off the demo fencer (the only one with no owner).
+            $fencer = Fencer::with('homeClub')->whereNull('user_id')->firstOrFail();
+        }
 
         $tournaments = $season->tournaments()->with('hostClub')->get();
 
@@ -33,6 +46,6 @@ class CalendarController extends Controller
             'nonneg' => $rows->where('non_negotiable', true)->count(),
         ];
 
-        return view('calendar', compact('season', 'fencer', 'months', 'stats'));
+        return view('calendar', compact('season', 'fencer', 'months', 'stats', 'fencers', 'isDemo'));
     }
 }

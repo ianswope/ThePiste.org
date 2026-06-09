@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // Local cache of geocoded US ZIP centroids so we never re-hit the API.
+        Schema::create('zip_codes', function (Blueprint $table) {
+            $table->string('zip', 10)->primary();
+            $table->decimal('lat', 9, 6);
+            $table->decimal('lng', 9, 6);
+            $table->string('city')->nullable();
+            $table->string('state', 2)->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('zip_codes');
+    }
+};

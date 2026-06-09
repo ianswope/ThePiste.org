@@ -91,10 +91,12 @@ class Season2026Seeder extends Seeder
         );
 
         // Demo fencer (Farren) — drives the default calendar preview until a visitor builds their own.
-        Fencer::updateOrCreate(
+        $farren = Fencer::updateOrCreate(
             ['name' => 'Farren'],
             [
                 'home_club_id' => $fcc->id,
+                'gender' => 'women',
+                'handedness' => 'right',
                 'weapon' => 'foil',
                 'age_group' => 'Junior',
                 'rating' => 'C',
@@ -105,6 +107,7 @@ class Season2026Seeder extends Seeder
                 'drive_radius_miles' => 450,
             ]
         );
+        $farren->weapons()->updateOrCreate(['weapon' => 'foil'], ['rating' => 'C', 'is_primary' => true]);
 
         foreach ($this->events() as $e) {
             [$lat, $lng] = $this->cities["{$e['city']}, {$e['state']}"] ?? [null, null];

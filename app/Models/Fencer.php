@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Fencer extends Model
 {
     protected $fillable = [
-        'user_id', 'home_club_id', 'name', 'weapon', 'age_group', 'rating',
+        'user_id', 'home_club_id', 'name', 'gender', 'handedness', 'birth_year',
+        'usa_fencing_id', 'weapon', 'age_group', 'rating',
         'home_zip', 'home_lat', 'home_lng', 'goal', 'drive_radius_miles',
     ];
 
@@ -26,6 +28,17 @@ class Fencer extends Model
     public function homeClub(): BelongsTo
     {
         return $this->belongsTo(Club::class, 'home_club_id');
+    }
+
+    public function weapons(): HasMany
+    {
+        return $this->hasMany(FencerWeapon::class);
+    }
+
+    /** The fencer's primary weapon row (falls back to first). */
+    public function primaryWeapon(): ?FencerWeapon
+    {
+        return $this->weapons->firstWhere('is_primary', true) ?? $this->weapons->first();
     }
 
     /** Competition categories this fencer is eligible to enter. */
