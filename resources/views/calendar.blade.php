@@ -46,6 +46,7 @@
                 </form>
             @endif
             <a class="pill" href="{{ route('season.build') }}">Build plan</a>
+            <a class="pill" href="{{ route('season.results') }}">Results</a>
             <a class="pill" href="{{ route('fencers.edit', $fencer) }}">Edit profile</a>
             <a href="{{ route('fencers.create') }}">+ Fencer</a>
             <form method="POST" action="{{ url('/logout') }}">@csrf<button type="submit">Log out</button></form>

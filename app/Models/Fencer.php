@@ -40,6 +40,34 @@ class Fencer extends Model
         return $this->hasMany(SeasonPlan::class);
     }
 
+    public function results(): HasMany
+    {
+        return $this->hasMany(Result::class);
+    }
+
+    /** Letter rating ladder, lowest to highest. */
+    public const RATING_LADDER = ['U', 'E', 'D', 'C', 'B', 'A'];
+
+    /** Target rating letter implied by the season goal (null = no rating goal). */
+    public function targetRating(): ?string
+    {
+        return $this->goal === 'earn_b' ? 'B' : null;
+    }
+
+    /** 0.0-1.0 progress of the primary-weapon rating toward the goal rating. */
+    public function ratingProgress(): ?float
+    {
+        $target = $this->targetRating();
+        if ($target === null) {
+            return null;
+        }
+
+        $current = array_search(strtoupper(substr($this->rating, 0, 1)), self::RATING_LADDER, true) ?: 0;
+        $goal = array_search($target, self::RATING_LADDER, true);
+
+        return min(1.0, $current / max(1, $goal));
+    }
+
     /** The fencer's primary weapon row (falls back to first). */
     public function primaryWeapon(): ?FencerWeapon
     {

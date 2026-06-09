@@ -63,6 +63,7 @@
             </div>
             <div class="grow"></div>
             <a class="btn btn-ghost" href="{{ route('calendar') }}">View calendar</a>
+            <a class="btn btn-ghost" href="{{ route('season.results') }}">Results</a>
             <span class="saved">Saved automatically</span>
         </div>
     </div>
