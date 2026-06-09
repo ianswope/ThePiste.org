@@ -175,7 +175,16 @@ class TournamentImporter
         // The source id wins: a rescheduled event keeps its identity (and gets
         // a fresh slug) instead of duplicating under the new date.
         if ($externalId !== '' && ($existing = Tournament::where('external_id', $externalId)->first())) {
-            $existing->update($attrs);
+            $existing->update($this->preservingCuration($attrs, $existing));
+
+            return 'updated';
+        }
+
+        // Adoption: a curated row (no source id) for the same date/state with a
+        // matching-enough name is the same real tournament — merge into it
+        // instead of creating a duplicate that "clashes with itself".
+        if ($externalId !== '' && ($adopt = $this->findAdoptable($starts, $state, $row['name']))) {
+            $adopt->update($this->preservingCuration($attrs, $adopt));
 
             return 'updated';
         }
@@ -184,6 +193,50 @@ class TournamentImporter
         Tournament::updateOrCreate(['slug' => $slug], $attrs);
 
         return $exists ? 'updated' : 'created';
+    }
+
+    /** Sync rows never erase hand-curated notes or home-club links. */
+    private function preservingCuration(array $attrs, Tournament $existing): array
+    {
+        $attrs['curated_note'] = $attrs['curated_note'] ?? $existing->curated_note;
+        $attrs['host_club_id'] = $attrs['host_club_id'] ?? $existing->host_club_id;
+
+        return $attrs;
+    }
+
+    /** A curated (no external id) row that looks like the same real event. */
+    private function findAdoptable(Carbon $starts, string $state, string $name): ?Tournament
+    {
+        return Tournament::whereNull('external_id')
+            ->whereDate('starts_on', $starts)
+            ->where('state', $state ?: null)
+            ->get()
+            ->first(fn (Tournament $c) => self::namesLookAlike($c->name, $name));
+    }
+
+    /** Whether two tournament names plausibly refer to the same event. */
+    public static function namesLookAlike(string $a, string $b): bool
+    {
+        $na = self::normalizeName($a);
+        $nb = self::normalizeName($b);
+        if ($na === '' || $nb === '') {
+            return false;
+        }
+        if (str_contains($na, $nb) || str_contains($nb, $na)) {
+            return true;
+        }
+        similar_text($na, $nb, $pct);
+
+        return $pct >= 60.0;
+    }
+
+    /** Lowercase, strip punctuation and circuit/category boilerplate that varies by listing. */
+    private static function normalizeName(string $n): string
+    {
+        $n = preg_replace('/[^a-z0-9]+/', ' ', strtolower($n));
+        $n = preg_replace('/\b(roc|rjcc|ryc|syc|rcc|rpc|d1a|div\s*1a|dv2|div\s*2|div\s*3|vet|y8|y10|y12|y14|cdt|jnr|cup|and|the)\b/', ' ', $n);
+
+        return trim(preg_replace('/\s+/', ' ', $n));
     }
 
     /** Split "JNR|CDT|D1A" (also accepts ; separators) into a clean array. */
