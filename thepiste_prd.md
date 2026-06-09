@@ -3,8 +3,16 @@
 **Date:** June 2026  
 **Author:** Ian Swope  
 **Domain:** thepiste.org  
-**Repo:** ~/repos/thepiste  
-**Stack:** Next.js · NestJS · PostgreSQL  
+**Repo:** ~/repos/thepiste (github.com/ianswope/thepiste)  
+**Stack:** Laravel 12 · Filament v3 · Livewire · Tailwind v4 · MySQL  
+
+> **Note (superseded sections):** The original Next.js/NestJS/PostgreSQL + Vercel/Railway
+> stack below was dropped in favor of building on Ian's existing droplet, which runs the
+> same Laravel/MySQL/nginx setup as escrimepro.com and promoeqp.com. The authoritative
+> current architecture, stack, and deploy process live in **CLAUDE.md**. The product scope,
+> personas, and user stories below still hold — plus login/accounts, results tracking, and
+> travel planning, which were added as in-scope after v1.0 was written (they appear as
+> Non-Goals below but are now planned). Live at https://thepiste.org.
 
 ---
 
