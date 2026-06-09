@@ -37,7 +37,7 @@ ssh root@thepiste.org 'cd /var/www/thepiste && ./deploy.sh'
 - **Backups**: nightly 03:30 cron runs `ops/backup-mysql.sh` (all app DBs on the box, gzip + integrity check, 14-day rotation in `/var/backups/mysql/`). `deploy.sh` takes a pre-migrate safety dump. DO droplet weekly backups are enabled (droplet `PromoEQPWebServer`, id 564359388). Restore: `gunzip < FILE.sql.gz | mysql thepiste`.
 - **Error pages**: branded Laravel views in `resources/views/errors/` (404/403/500/503, self-contained CSS). `public/maintenance.html` is a static "back soon" page nginx serves on 502/503/504 (`error_page` in the vhost, internal-only) — covers php-fpm being down.
 - **Uptime**: DO uptime check "thepiste.org" (id f7a197a7-e9e5-484a-93de-3ed73d18b8ef, us_east + us_west).
-- **Mail is NOT configured** (`MAIL_MAILER=log`) — password resets land in the log. Wire Resend/Postmark before real users.
+- **Mail**: Resend (`MAIL_MAILER=resend`, `RESEND_API_KEY` in prod `.env`), domain thepiste.org verified, from `noreply@thepiste.org`. Branded notification templates in `resources/views/vendor/mail/` (night header band, red-left/green-right ribbon, green button). Free tier: 3k/month. Local dev logs (`MAIL_MAILER=log`).
 
 ## MCP connector
 
