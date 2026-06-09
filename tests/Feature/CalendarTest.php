@@ -18,7 +18,7 @@ class CalendarTest extends TestCase
 
     public function test_calendar_renders_with_personalized_tiers(): void
     {
-        $response = $this->get('/');
+        $response = $this->get('/demo');
 
         $response->assertOk();
         $response->assertSee('ThePiste');
@@ -42,7 +42,7 @@ class CalendarTest extends TestCase
 
     public function test_stats_reflect_the_demo_fencer(): void
     {
-        $response = $this->get('/');
+        $response = $this->get('/demo');
 
         // 4 NACs in the 2026-27 season.
         $response->assertSeeInOrder(['<span class="sn">4</span>', 'NACs'], false);

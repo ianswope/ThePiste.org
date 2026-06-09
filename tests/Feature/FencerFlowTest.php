@@ -24,16 +24,28 @@ class FencerFlowTest extends TestCase
         $this->get('/register')->assertOk()->assertSee('Create your account');
     }
 
-    public function test_guest_calendar_uses_demo_profile(): void
+    public function test_guest_sees_landing_page(): void
     {
-        $this->get('/')->assertOk()->assertSee('Sample profile');
+        $this->get('/')->assertOk()->assertSee('Build your season');
+    }
+
+    public function test_sample_calendar_uses_demo_profile(): void
+    {
+        $this->get('/demo')->assertOk()->assertSee('Sample profile');
+    }
+
+    public function test_signed_in_user_is_redirected_off_the_landing_page(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_PARENT]);
+
+        $this->actingAs($user)->get('/')->assertRedirect(route('calendar'));
     }
 
     public function test_user_without_fencer_is_sent_to_the_builder(): void
     {
         $user = User::factory()->create(['role' => User::ROLE_PARENT]);
 
-        $this->actingAs($user)->get('/')->assertRedirect(route('fencers.create'));
+        $this->actingAs($user)->get('/season')->assertRedirect(route('fencers.create'));
     }
 
     public function test_user_can_build_a_profile_and_calendar_personalizes(): void
@@ -75,7 +87,7 @@ class FencerFlowTest extends TestCase
         $this->assertEqualsWithDelta(41.808, $fencer->home_lat, 0.01); // geocoded
 
         // The calendar now shows this fencer, not the demo.
-        $this->actingAs($user)->get('/')
+        $this->actingAs($user)->get('/season')
             ->assertOk()
             ->assertSee('Test Kid')
             ->assertDontSee('Sample profile');

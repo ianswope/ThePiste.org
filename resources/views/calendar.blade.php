@@ -26,6 +26,13 @@
 </head>
 <body>
 
+@if ($isDemo)
+    <div class="demobanner">
+        You're viewing a sample season for a demo fencer.
+        <a href="{{ url('/register') }}">Build your own &rarr;</a>
+    </div>
+@endif
+
 <header class="header">
     <div class="authbar">
         @auth
@@ -48,7 +55,7 @@
         @endguest
     </div>
     <div class="header-inner">
-        <div class="header-eye"><a href="{{ route('calendar') }}" class="brand">ThePiste</a> · USA Fencing · {{ $season->name }}</div>
+        <div class="header-eye"><a href="{{ url('/') }}" class="brand">ThePiste</a> · USA Fencing · {{ $season->name }}</div>
         <h1>{{ $fencer->name }}'s Season Calendar</h1>
         <div class="header-meta">
             @if ($isDemo)<span class="tag club">Sample profile</span>@endif
