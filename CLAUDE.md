@@ -32,6 +32,10 @@ ssh root@thepiste.org 'cd /var/www/thepiste && ./deploy.sh'
 - **Catalog ingestion** — the catalog is global (shared by all users); only admins import. Single path: `app/Services/TournamentCsvImporter.php` (upsert by slug = name + start date, so re-imports update in place; per-row errors; pipe-separated list fields). Filament Tournament list has "Import CSV" + "CSV template" actions. Geocoding: `PlaceGeocoder` (city/state → existing tournaments → `geo_places` cache → Nominatim) and `ZipGeocoder` (profile ZIPs → `zip_codes` cache → zippopotam.us). A future AskFRED auto-sync should feed the same importer path.
 - **Data model** — `seasons`, `clubs`, `tournaments` (catalog); `users` (role: super_admin|club_admin|parent|fencer), `fencers` (managed by a user/parent, optional home club). Results + travel/trips + season plans added with their features.
 
+## MCP connector
+
+Remote MCP server (laravel/mcp, Streamable HTTP) at `https://thepiste.org/mcp`, authed with a Sanctum bearer token (`User->createToken('claude-desktop')`). Server: `app/Mcp/ThePisteServer.php`; tools in `app/Mcp/Tools/` (list-fencers, set-goal, get-season-outlook, get-plan, manage-plan, log-result, get-progress). Registered in `routes/ai.php`. Claude Desktop connects via the `mcp-remote` bridge with an `Authorization: Bearer` header.
+
 ## Conventions / writing rules
 
 - No em dashes. No AI cliches ("Certainly!", "Great question!"). No sycophancy. Be direct, do not narrate.
