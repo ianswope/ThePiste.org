@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Fencer;
 use App\Models\Result;
 use App\Models\Season;
+use App\Services\ResultRecorder;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -64,8 +65,10 @@ class ResultsTracker extends Component
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $result = $this->fencer->results()->create($data);
-        $this->maybeUpgradeRating($result);
+        $outcome = app(ResultRecorder::class)->record($this->fencer, $data);
+        if ($outcome['rating_upgraded']) {
+            session()->flash('rating_upgraded', $outcome['rating_upgraded']);
+        }
 
         $this->reset(['tournament_id', 'event_name', 'category', 'place', 'field_size', 'rating_earned', 'points', 'notes']);
         $this->fenced_on = now()->toDateString();
@@ -75,35 +78,6 @@ class ResultsTracker extends Component
     public function delete(int $resultId): void
     {
         $this->fencer->results()->whereKey($resultId)->delete();
-    }
-
-    /**
-     * A recorded earned rating better than the current one upgrades the
-     * weapon's rating (and the fencer's headline rating when it's the
-     * primary weapon). Earning a rating is permanent; deletes don't revert.
-     */
-    private function maybeUpgradeRating(Result $result): void
-    {
-        $earned = strtoupper(substr(trim((string) $result->rating_earned), 0, 1));
-        if (! in_array($earned, Fencer::RATING_LADDER, true) || $earned === 'U') {
-            return;
-        }
-
-        $row = $this->fencer->weapons->firstWhere('weapon', $result->weapon);
-        if (! $row) {
-            return;
-        }
-
-        $currentIdx = array_search(strtoupper(substr($row->rating, 0, 1)), Fencer::RATING_LADDER, true) ?: 0;
-        $earnedIdx = array_search($earned, Fencer::RATING_LADDER, true);
-
-        if ($earnedIdx > $currentIdx) {
-            $row->update(['rating' => trim($result->rating_earned)]);
-            if ($row->is_primary) {
-                $this->fencer->update(['rating' => trim($result->rating_earned)]);
-            }
-            session()->flash('rating_upgraded', ucfirst($result->weapon)." rating updated to {$result->rating_earned}.");
-        }
     }
 
     public function render()
