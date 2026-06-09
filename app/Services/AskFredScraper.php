@@ -154,16 +154,41 @@ class AskFredScraper
         return [$starts->toDateString(), $ends->toDateString(), (string) ($q['location'] ?? '')];
     }
 
+    /** Full state names appear in some venue addresses ("Santa Clara, California 95054"). */
+    private const STATE_NAMES = [
+        'ALABAMA' => 'AL', 'ALASKA' => 'AK', 'ARIZONA' => 'AZ', 'ARKANSAS' => 'AR', 'CALIFORNIA' => 'CA',
+        'COLORADO' => 'CO', 'CONNECTICUT' => 'CT', 'DELAWARE' => 'DE', 'DISTRICT OF COLUMBIA' => 'DC',
+        'FLORIDA' => 'FL', 'GEORGIA' => 'GA', 'HAWAII' => 'HI', 'IDAHO' => 'ID', 'ILLINOIS' => 'IL',
+        'INDIANA' => 'IN', 'IOWA' => 'IA', 'KANSAS' => 'KS', 'KENTUCKY' => 'KY', 'LOUISIANA' => 'LA',
+        'MAINE' => 'ME', 'MARYLAND' => 'MD', 'MASSACHUSETTS' => 'MA', 'MICHIGAN' => 'MI', 'MINNESOTA' => 'MN',
+        'MISSISSIPPI' => 'MS', 'MISSOURI' => 'MO', 'MONTANA' => 'MT', 'NEBRASKA' => 'NE', 'NEVADA' => 'NV',
+        'NEW HAMPSHIRE' => 'NH', 'NEW JERSEY' => 'NJ', 'NEW MEXICO' => 'NM', 'NEW YORK' => 'NY',
+        'NORTH CAROLINA' => 'NC', 'NORTH DAKOTA' => 'ND', 'OHIO' => 'OH', 'OKLAHOMA' => 'OK', 'OREGON' => 'OR',
+        'PENNSYLVANIA' => 'PA', 'RHODE ISLAND' => 'RI', 'SOUTH CAROLINA' => 'SC', 'SOUTH DAKOTA' => 'SD',
+        'TENNESSEE' => 'TN', 'TEXAS' => 'TX', 'UTAH' => 'UT', 'VERMONT' => 'VT', 'VIRGINIA' => 'VA',
+        'WASHINGTON' => 'WA', 'WEST VIRGINIA' => 'WV', 'WISCONSIN' => 'WI', 'WYOMING' => 'WY',
+    ];
+
     /** @return array{0: string, 1: string}|null [city, state] — null for non-US addresses */
     private function parseUsLocation(string $location): ?array
     {
-        // US addresses end with "City, ST 12345[-6789][ US|USA]". A 5-digit zip
-        // after a 2-letter code is the US signal (Canadian postals are alphanumeric).
-        if (! preg_match('/(?:^|,)\s*([^,]+?),\s*([A-Z]{2})\s+(\d{5})(?:-\d{4})?(?:\s+(?:US|USA))?\s*$/', trim($location), $m)) {
-            return null;
+        $location = trim($location);
+
+        // "City, ST 12345[-6789][ US|USA]" — a 5-digit zip after a 2-letter code
+        // is the US signal (Canadian postals are alphanumeric).
+        if (preg_match('/(?:^|,)\s*([^,]+?),\s*([A-Z]{2})\s+(\d{5})(?:-\d{4})?(?:\s+(?:US|USA))?\s*$/', $location, $m)) {
+            return [trim($m[1]), $m[2]];
         }
 
-        return [trim($m[1]), $m[2]];
+        // "City, California 95054[ US]" — full state name spelled out.
+        if (preg_match('/(?:^|,)\s*([^,]+?),\s*([A-Za-z][A-Za-z ]+?)\s+(\d{5})(?:-\d{4})?(?:\s+(?:US|USA))?\s*$/', $location, $m)) {
+            $code = self::STATE_NAMES[strtoupper(trim($m[2]))] ?? null;
+            if ($code !== null) {
+                return [trim($m[1]), $code];
+            }
+        }
+
+        return null;
     }
 
     /** @return string[] our category codes derived from the card's event table */

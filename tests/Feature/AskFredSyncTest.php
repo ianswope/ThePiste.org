@@ -25,9 +25,18 @@ class AskFredSyncTest extends TestCase
         $parsed = app(AskFredScraper::class)->parseListing($this->fixture());
 
         $this->assertTrue($parsed['hasNext']);
-        $this->assertCount(2, $parsed['rows']);
+        $this->assertCount(3, $parsed['rows']);
         $this->assertSame(1, $parsed['skipped']['non_us']);        // Richmond BC
         $this->assertSame(1, $parsed['skipped']['no_categories']); // Y8-only
+
+        // Spelled-out state names ("Santa Clara, California 95054 US") are US events.
+        $afm = $parsed['rows'][2];
+        $this->assertSame('AFM RYC/RJCC/ROC Div1A/Div2/Vet', $afm['name']);
+        $this->assertSame(['Santa Clara', 'CA'], [$afm['city'], $afm['state']]);
+        $this->assertSame('R4', $afm['region']);
+        $this->assertSame('regional', $afm['level']);
+        $this->assertSame('2026-10-23', $afm['starts_on']);
+        $this->assertSame('2026-10-26', $afm['ends_on']);
 
         // A division-level "Junior Olympic Qualifier" is NOT a national event,
         // and with no circuit designators it's a club-level (local) event.
@@ -68,7 +77,7 @@ class AskFredSyncTest extends TestCase
         $this->artisan('thepiste:sync-askfred', ['--from' => '2026-08-01'])
             ->assertExitCode(0);
 
-        $this->assertSame(2, Tournament::count());
+        $this->assertSame(3, Tournament::count());
 
         $t = Tournament::where('name', 'Badger Open ROC & RJCC')->firstOrFail();
         $this->assertSame('Badger Open ROC & RJCC', $t->name);
@@ -80,7 +89,7 @@ class AskFredSyncTest extends TestCase
 
         // Re-running must update in place, not duplicate.
         $this->artisan('thepiste:sync-askfred', ['--from' => '2026-08-01'])->assertExitCode(0);
-        $this->assertSame(2, Tournament::count());
+        $this->assertSame(3, Tournament::count());
     }
 
     public function test_date_change_at_source_updates_in_place_instead_of_duplicating(): void
