@@ -4,7 +4,7 @@ namespace App\Filament\Resources\TournamentResource\Pages;
 
 use App\Filament\Resources\TournamentResource;
 use App\Models\Season;
-use App\Services\TournamentCsvImporter;
+use App\Services\TournamentImporter;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -25,7 +25,7 @@ class ListTournaments extends ListRecords
                 ->color('gray')
                 ->action(function () {
                     $rows = [
-                        TournamentCsvImporter::COLUMNS,
+                        TournamentImporter::COLUMNS,
                         ['Example Open ROC/RJCC', '2026-10-17', '2026-10-18', 'Madison', 'WI', 'R2',
                             '', 'ROC|RJCC', 'JNR|CDT|D1A', '', 'Optional strategy note shown on the card.', 'https://example.com', '', ''],
                         ['October NAC', '2026-10-09', '2026-10-12', 'Orlando', 'FL', 'NATIONAL',
@@ -58,9 +58,9 @@ class ListTournaments extends ListRecords
                         ->required()
                         ->helperText('Use the CSV template for the expected columns. Rows are matched by name + start date, so re-importing updates events in place.'),
                 ])
-                ->action(function (array $data, TournamentCsvImporter $importer) {
+                ->action(function (array $data, TournamentImporter $importer) {
                     $csv = Storage::disk('local')->get($data['file']);
-                    $summary = $importer->import($csv, Season::findOrFail($data['season_id']));
+                    $summary = $importer->importCsv($csv, Season::findOrFail($data['season_id']));
                     Storage::disk('local')->delete($data['file']);
 
                     $body = "{$summary['created']} created, {$summary['updated']} updated, {$summary['geocoded']} geocoded.";

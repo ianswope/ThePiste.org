@@ -1,0 +1,92 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Season;
+use App\Models\Tournament;
+use App\Services\AskFredScraper;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
+use Tests\TestCase;
+
+class AskFredSyncTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function fixture(): string
+    {
+        return file_get_contents(base_path('tests/Fixtures/askfred-listing.html'));
+    }
+
+    public function test_parser_extracts_us_tournaments_and_skips_the_rest(): void
+    {
+        $parsed = app(AskFredScraper::class)->parseListing($this->fixture());
+
+        $this->assertTrue($parsed['hasNext']);
+        $this->assertCount(1, $parsed['rows']);
+        $this->assertSame(1, $parsed['skipped']['non_us']);        // Richmond BC
+        $this->assertSame(1, $parsed['skipped']['no_categories']); // Y8-only
+
+        $row = $parsed['rows'][0];
+        $this->assertSame('Badger Open ROC & RJCC', $row['name']);
+        $this->assertSame('2026-11-07', $row['starts_on']);
+        $this->assertSame('2026-11-08', $row['ends_on']); // gcal end date is exclusive
+        $this->assertSame('Madison', $row['city']);
+        $this->assertSame('WI', $row['state']);
+        $this->assertSame('R2', $row['region']);
+        $this->assertSame('ROC|RJCC', $row['circuits']);
+        $this->assertSame('JNR|CDT|Y12|OPEN', $row['contested_events']);
+        $this->assertStringContainsString('aaaaaaaa-1111-2222-3333-444444444444', $row['source_url']);
+    }
+
+    public function test_sync_command_imports_into_the_active_season(): void
+    {
+        Season::create([
+            'name' => '2026-27', 'slug' => '2026-27',
+            'starts_on' => '2026-08-01', 'ends_on' => '2027-05-31', 'is_active' => true,
+        ]);
+
+        // Page 2 has no cards -> loop also stops on missing rel=next.
+        Http::fake([
+            'www.askfred.net/tournaments?*page=1*' => Http::response($this->fixture()),
+            'www.askfred.net/tournaments*' => Http::response('<html><body>empty</body></html>'),
+            'nominatim.openstreetmap.org/*' => Http::response([['lat' => '43.073', 'lon' => '-89.401']]),
+        ]);
+        Sleep::fake();
+
+        $this->artisan('thepiste:sync-askfred', ['--from' => '2026-08-01'])
+            ->assertExitCode(0);
+
+        $this->assertSame(1, Tournament::count());
+
+        $t = Tournament::firstOrFail();
+        $this->assertSame('Badger Open ROC & RJCC', $t->name);
+        $this->assertSame('R2', $t->region);
+        $this->assertFalse($t->is_nac);
+        $this->assertSame(['JNR', 'CDT', 'Y12', 'OPEN'], $t->contested_events);
+        $this->assertEqualsWithDelta(43.073, $t->lat, 0.001); // geocoded
+        $this->assertStringContainsString('askfred.net', $t->source_url);
+
+        // Re-running must update in place, not duplicate.
+        $this->artisan('thepiste:sync-askfred', ['--from' => '2026-08-01'])->assertExitCode(0);
+        $this->assertSame(1, Tournament::count());
+    }
+
+    public function test_dry_run_writes_nothing(): void
+    {
+        Season::create([
+            'name' => '2026-27', 'slug' => '2026-27',
+            'starts_on' => '2026-08-01', 'ends_on' => '2027-05-31', 'is_active' => true,
+        ]);
+
+        Http::fake(['www.askfred.net/*' => Http::response($this->fixture())]);
+        Sleep::fake();
+
+        $this->artisan('thepiste:sync-askfred', ['--dry-run' => true, '--from' => '2026-08-01', '--max-pages' => 1])
+            ->expectsOutputToContain('would import')
+            ->assertExitCode(0);
+
+        $this->assertSame(0, Tournament::count());
+    }
+}

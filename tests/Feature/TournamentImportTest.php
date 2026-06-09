@@ -5,9 +5,10 @@ namespace Tests\Feature;
 use App\Models\Club;
 use App\Models\Season;
 use App\Models\Tournament;
-use App\Services\TournamentCsvImporter;
+use App\Services\TournamentImporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 use Tests\TestCase;
 
 class TournamentImportTest extends TestCase
@@ -27,7 +28,7 @@ class TournamentImportTest extends TestCase
 
     private function import(string $csv): array
     {
-        return app(TournamentCsvImporter::class)->import($csv, $this->season);
+        return app(TournamentImporter::class)->importCsv($csv, $this->season);
     }
 
     public function test_imports_rows_with_explicit_coordinates(): void
@@ -68,6 +69,8 @@ class TournamentImportTest extends TestCase
 
     public function test_geocodes_when_coordinates_missing(): void
     {
+        Sleep::fake();
+
         Http::fake([
             'nominatim.openstreetmap.org/*' => Http::response([
                 ['lat' => '43.073', 'lon' => '-89.401'],

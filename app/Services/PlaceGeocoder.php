@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\GeoPlace;
 use App\Models\Tournament;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 
 /**
  * Resolves "City, ST" to lat/lng for imported tournaments.
@@ -38,6 +39,10 @@ class PlaceGeocoder
         }
 
         try {
+            // Nominatim usage policy: at most 1 request/second. Bulk imports
+            // hit this path once per *new* city, so pace each API call.
+            Sleep::for(1100)->milliseconds();
+
             $res = Http::timeout(8)
                 ->withHeaders(['User-Agent' => 'ThePiste/1.0 (thepiste.org; ian@promoeqp.com)'])
                 ->get('https://nominatim.openstreetmap.org/search', [

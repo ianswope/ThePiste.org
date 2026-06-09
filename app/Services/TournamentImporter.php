@@ -9,15 +9,12 @@ use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * Imports a season's tournament calendar from CSV. Upserts by slug
- * (name + start date) so re-importing a corrected file updates in place.
- * Rows that fail validation are reported, not fatal. Missing lat/lng is
- * geocoded from city/state via PlaceGeocoder.
- *
- * This is the single ingestion path for the catalog: the Filament upload
- * uses it today and the automated AskFRED sync will feed it later.
+ * The single ingestion path for the tournament catalog. Upserts by slug
+ * (name + start date) so re-importing updates in place; rows that fail
+ * validation are reported, not fatal. Fed by the admin CSV upload and the
+ * AskFRED sync alike. Missing lat/lng is geocoded via PlaceGeocoder.
  */
-class TournamentCsvImporter
+class TournamentImporter
 {
     public const COLUMNS = [
         'name', 'starts_on', 'ends_on', 'city', 'state', 'region',
@@ -32,7 +29,7 @@ class TournamentCsvImporter
     /**
      * @return array{created: int, updated: int, geocoded: int, errors: string[]}
      */
-    public function import(string $csv, Season $season): array
+    public function importCsv(string $csv, Season $season): array
     {
         $summary = ['created' => 0, 'updated' => 0, 'geocoded' => 0, 'errors' => []];
 
@@ -72,7 +69,7 @@ class TournamentCsvImporter
             }
 
             try {
-                $result = $this->importRow($row, $season, $summary['geocoded']);
+                $result = $this->upsertRow($row, $season, $summary['geocoded']);
                 $summary[$result]++;
             } catch (\InvalidArgumentException $e) {
                 $summary['errors'][] = "Line {$line}: {$e->getMessage()}";
@@ -83,8 +80,14 @@ class TournamentCsvImporter
         return $summary;
     }
 
-    /** @return 'created'|'updated' */
-    private function importRow(array $row, Season $season, int &$geocoded): string
+    /**
+     * Validate and upsert one catalog row (string fields, COLUMNS keys).
+     *
+     * @return 'created'|'updated'
+     *
+     * @throws \InvalidArgumentException on a bad row
+     */
+    public function upsertRow(array $row, Season $season, int &$geocoded): string
     {
         foreach (self::REQUIRED as $key) {
             if (($row[$key] ?? '') === '') {

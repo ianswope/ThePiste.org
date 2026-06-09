@@ -11,10 +11,10 @@ return [
         'Y10' => ['Y10', 'Y12'],
         'Y12' => ['Y12', 'Y14'],
         'Y14' => ['Y14', 'CDT'],
-        'Cadet' => ['CDT', 'JNR', 'D1A', 'DV2'],
-        'Junior' => ['JNR', 'CDT', 'D1A', 'DV2'],
-        'Senior' => ['JNR', 'D1A', 'DV2'],
-        'Vet' => ['VET', 'D1A', 'DV2'],
+        'Cadet' => ['CDT', 'JNR', 'D1A', 'DV2', 'OPEN'],
+        'Junior' => ['JNR', 'CDT', 'D1A', 'DV2', 'OPEN'],
+        'Senior' => ['JNR', 'D1A', 'DV2', 'OPEN'],
+        'Vet' => ['VET', 'D1A', 'DV2', 'OPEN'],
     ],
 
     // An event contesting this many of the fencer's eligible categories is "high value".
@@ -39,5 +39,32 @@ return [
         'qualify_jo' => 'Qualify for Junior Olympics',
         'regional_standing' => 'Build regional standing',
         'explore' => 'Explore / just getting started',
+    ],
+
+    /*
+    | State -> USA Fencing region. Approximate: regions are formally composed
+    | of divisions, and a few states straddle regions (notably California,
+    | where NorCal fences R1 and SoCal R4 — we default CA to R4). Used by the
+    | AskFRED sync; correct individual events in the admin if needed.
+    */
+    'state_regions' => [
+        // R1 — Northwest / mountain west
+        'AK' => 'R1', 'WA' => 'R1', 'OR' => 'R1', 'ID' => 'R1', 'MT' => 'R1',
+        'WY' => 'R1', 'UT' => 'R1', 'NV' => 'R1', 'HI' => 'R1',
+        // R2 — Midwest
+        'IL' => 'R2', 'IN' => 'R2', 'IA' => 'R2', 'KY' => 'R2', 'MI' => 'R2',
+        'MN' => 'R2', 'OH' => 'R2', 'WI' => 'R2', 'ND' => 'R2', 'SD' => 'R2',
+        // R3 — Northeast / mid-Atlantic north
+        'CT' => 'R3', 'MA' => 'R3', 'ME' => 'R3', 'NH' => 'R3', 'NY' => 'R3',
+        'NJ' => 'R3', 'PA' => 'R3', 'RI' => 'R3', 'VT' => 'R3',
+        // R4 — Southwest / SoCal
+        'AZ' => 'R4', 'CA' => 'R4', 'CO' => 'R4', 'NM' => 'R4',
+        // R5 — South central / plains
+        'TX' => 'R5', 'OK' => 'R5', 'AR' => 'R5', 'LA' => 'R5', 'KS' => 'R5',
+        'MO' => 'R5', 'NE' => 'R5',
+        // R6 — Southeast / mid-Atlantic south
+        'AL' => 'R6', 'DC' => 'R6', 'DE' => 'R6', 'FL' => 'R6', 'GA' => 'R6',
+        'MD' => 'R6', 'MS' => 'R6', 'NC' => 'R6', 'SC' => 'R6', 'TN' => 'R6',
+        'VA' => 'R6', 'WV' => 'R6',
     ],
 ];
