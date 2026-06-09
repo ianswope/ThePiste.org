@@ -54,6 +54,12 @@ class GoalScorer
 
     private function rating(Goal $goal, Tournament $t, array $ctx): ?array
     {
+        // Club opens almost never rate the field a letter goal needs; only
+        // official circuit/national events count as a credible rating path.
+        if ($t->level === 'local') {
+            return null;
+        }
+
         $earning = array_values(array_intersect(
             $ctx['eligible'],
             config('fencing.rating_earning_categories')

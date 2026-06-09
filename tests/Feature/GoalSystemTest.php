@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Livewire\SeasonBuilder;
 use App\Models\Season;
+use App\Models\Tournament;
 use App\Models\User;
+use App\Services\GoalScorer;
 use App\Services\TierService;
 use Database\Seeders\Season2026Seeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -58,6 +60,16 @@ class GoalSystemTest extends TestCase
         // A JNR/CDT-only regional doesn't advance a rating goal.
         $regional = $rows->first(fn ($r) => str_contains($r['tournament']->name, 'Pizza'));
         $this->assertSame([], array_column($regional['advances'], 'type'));
+
+        // Club-level events are never a credible rating path, even with OPEN contested.
+        $club = Tournament::first()->replicate();
+        $club->fill(['name' => 'Club Open', 'level' => 'local', 'contested_events' => ['OPEN'], 'is_nac' => false]);
+        $advances = app(GoalScorer::class)->advances(
+            $user->fencers()->first()->activeGoals(),
+            $club,
+            ['eligible' => ['OPEN'], 'in_region' => true, 'driveable' => true, 'distance' => 30, 'tier' => 'drive']
+        );
+        $this->assertSame([], $advances);
     }
 
     public function test_qualify_goal_lights_the_path(): void
