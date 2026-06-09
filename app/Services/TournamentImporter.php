@@ -20,6 +20,9 @@ class TournamentImporter
         'name', 'starts_on', 'ends_on', 'city', 'state', 'region',
         'is_nac', 'circuits', 'contested_events', 'host_club',
         'curated_note', 'source_url', 'lat', 'lng',
+        // optional: stable id at the source (set by the AskFRED sync) — rows
+        // matching an existing external_id update in place even if dates moved
+        'external_id',
     ];
 
     private const REQUIRED = ['name', 'starts_on', 'ends_on', 'city', 'state', 'region', 'contested_events'];
@@ -136,28 +139,41 @@ class TournamentImporter
         }
 
         $slug = Str::slug($row['name']).'-'.$starts->toDateString();
-        $exists = Tournament::where('slug', $slug)->exists();
+        $externalId = trim($row['external_id'] ?? '');
 
-        Tournament::updateOrCreate(
-            ['slug' => $slug],
-            [
-                'season_id' => $season->id,
-                'host_club_id' => $hostClub?->id,
-                'name' => $row['name'],
-                'starts_on' => $starts,
-                'ends_on' => $ends,
-                'city' => $row['city'],
-                'state' => $state,
-                'region' => strtoupper($row['region']),
-                'lat' => $lat,
-                'lng' => $lng,
-                'is_nac' => $this->truthy($row['is_nac'] ?? ''),
-                'circuits' => $this->splitList($row['circuits'] ?? '') ?: null,
-                'contested_events' => $events,
-                'curated_note' => ($row['curated_note'] ?? '') !== '' ? $row['curated_note'] : null,
-                'source_url' => ($row['source_url'] ?? '') !== '' ? $row['source_url'] : null,
-            ]
-        );
+        $attrs = [
+            'season_id' => $season->id,
+            'host_club_id' => $hostClub?->id,
+            'name' => $row['name'],
+            'slug' => $slug,
+            'starts_on' => $starts,
+            'ends_on' => $ends,
+            'city' => $row['city'],
+            'state' => $state,
+            'region' => strtoupper($row['region']),
+            'lat' => $lat,
+            'lng' => $lng,
+            'is_nac' => $this->truthy($row['is_nac'] ?? ''),
+            'circuits' => $this->splitList($row['circuits'] ?? '') ?: null,
+            'contested_events' => $events,
+            'curated_note' => ($row['curated_note'] ?? '') !== '' ? $row['curated_note'] : null,
+            'source_url' => ($row['source_url'] ?? '') !== '' ? $row['source_url'] : null,
+        ];
+        if ($externalId !== '') {
+            $attrs['external_id'] = $externalId;
+            $attrs['last_seen_at'] = now();
+        }
+
+        // The source id wins: a rescheduled event keeps its identity (and gets
+        // a fresh slug) instead of duplicating under the new date.
+        if ($externalId !== '' && ($existing = Tournament::where('external_id', $externalId)->first())) {
+            $existing->update($attrs);
+
+            return 'updated';
+        }
+
+        $exists = Tournament::where('slug', $slug)->exists();
+        Tournament::updateOrCreate(['slug' => $slug], $attrs);
 
         return $exists ? 'updated' : 'created';
     }

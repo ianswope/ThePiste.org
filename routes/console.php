@@ -10,3 +10,7 @@ Artisan::command('inspire', function () {
 
 // Keep the tournament catalog current from AskFRED (quiet hour, once a day).
 Schedule::command('thepiste:sync-askfred')->dailyAt('05:10');
+
+// Deep audit 3x/week: re-walk the whole season, reconcile date changes by
+// source id, and flag upcoming events that vanished (possible cancellations).
+Schedule::command('thepiste:sync-askfred --full')->days([1, 3, 5])->at('05:40');

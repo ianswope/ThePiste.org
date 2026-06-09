@@ -116,6 +116,7 @@ class AskFredScraper
                 'source_url' => 'https://www.askfred.net/tournaments/'.$uuid,
                 'lat' => '',
                 'lng' => '',
+                'external_id' => $uuid,
             ];
         }
 

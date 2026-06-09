@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Season;
+use App\Models\Tournament;
 use App\Services\AskFredScraper;
 use App\Services\TournamentImporter;
 use Carbon\Carbon;
@@ -15,7 +16,8 @@ class SyncAskFred extends Command
         {--dry-run : Parse and report without writing to the catalog}
         {--max-pages=30 : Safety cap on listing pages fetched}
         {--from= : Only events starting after this date (default: today)}
-        {--season= : Season slug to attach events to (default: active season)}';
+        {--season= : Season slug to attach events to (default: active season)}
+        {--full : Audit sweep — re-walk from the season start (higher page cap) and report events that vanished from AskFRED}';
 
     protected $description = 'Pull upcoming US tournaments from AskFRED into the catalog (same upsert path as CSV import)';
 
@@ -25,7 +27,9 @@ class SyncAskFred extends Command
             ? Season::where('slug', $this->option('season'))->firstOrFail()
             : (Season::where('is_active', true)->first() ?? Season::firstOrFail());
 
-        $from = $this->option('from') ?: now()->toDateString();
+        $full = (bool) $this->option('full');
+        $from = $this->option('from') ?: ($full ? $season->starts_on->toDateString() : now()->toDateString());
+        $maxPages = $full && $this->option('max-pages') === '30' ? 60 : (int) $this->option('max-pages');
         $dry = (bool) $this->option('dry-run');
 
         $this->info(($dry ? '[DRY RUN] ' : '')."Syncing AskFRED events after {$from} into season {$season->name}…");
@@ -34,7 +38,7 @@ class SyncAskFred extends Command
         $skippedTotals = ['non_us' => 0, 'no_dates' => 0, 'no_categories' => 0];
         $pages = 0;
 
-        for ($page = 1; $page <= (int) $this->option('max-pages'); $page++) {
+        for ($page = 1; $page <= $maxPages; $page++) {
             $parsed = $scraper->parseListing($scraper->fetchPage($page, $from));
             $pages++;
 
@@ -86,6 +90,36 @@ class SyncAskFred extends Command
             $this->warn("  ! {$err}");
         }
 
+        if ($full && ! $dry) {
+            $this->reportVanished();
+        }
+
         return self::SUCCESS;
+    }
+
+    /**
+     * Upcoming synced events that a full sweep no longer sees on AskFRED are
+     * likely cancelled or withdrawn. Flag them — never auto-delete; someone
+     * may be planning around that record.
+     */
+    private function reportVanished(): void
+    {
+        $vanished = Tournament::whereNotNull('external_id')
+            ->whereDate('starts_on', '>=', now())
+            ->where('last_seen_at', '<', now()->subDays(3))
+            ->orderBy('starts_on')
+            ->get();
+
+        if ($vanished->isEmpty()) {
+            $this->info('No previously-synced upcoming events have vanished from AskFRED.');
+
+            return;
+        }
+
+        $this->warn("{$vanished->count()} upcoming event(s) no longer appear on AskFRED (possible cancellations — review in /admin):");
+        foreach ($vanished as $t) {
+            $this->warn("  ? {$t->starts_on->toDateString()}  {$t->name} ({$t->city}, {$t->state})");
+            logger()->warning('AskFRED event vanished', ['tournament_id' => $t->id, 'name' => $t->name]);
+        }
     }
 }
