@@ -42,7 +42,7 @@
                             <div class="bdate">{{ $t->starts_on->format('M j') }} · {{ $t->region }}@if($t->circuits) · {{ implode('/', $t->circuits) }}@endif{{ $t->level === 'local' ? ' · CLUB' : '' }}{{ $t->country !== 'US' ? ' · '.$t->country : '' }}</div>
                             <div class="bname">{{ $t->name }}</div>
                             <div class="bmeta">
-                                <span>📍 {{ $t->city }}, {{ $t->state }}</span>
+                                <span>{{ $t->city }}, {{ $t->state }}</span>
                                 @if ($r['distance'])<span>{{ round($r['distance']) }} mi · {{ $r['driveable'] ? 'drive' : 'fly' }}</span>@endif
                                 @if (! empty($r['eligible']))<span>{{ implode(', ', $r['eligible']) }}</span>@endif
                                 @if ($clash)
@@ -76,7 +76,7 @@
                 <span class="n">{{ $tally['flights'] }}<small>Flights</small></span>
                 <span class="n">{{ $tally['est_cost'] ? '$'.number_format($tally['est_cost']) : '—' }}<small>Budget</small></span>
                 @if (count($clashIds))
-                    <span class="n" style="color:var(--red-ink);">{{ count($clashIds) }}<small style="color:var(--red-ink);">Clashes</small></span>
+                    <span class="n alert">{{ count($clashIds) }}<small>Clashes</small></span>
                 @endif
             </div>
             <div class="grow"></div>

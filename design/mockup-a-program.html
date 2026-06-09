@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction A · The Season Program</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Albert+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Direction A · "The Season Program" ───────────────────────────────
+   A beautifully typeset race program. Warm paper, serif display,
+   hairline rules instead of boxes. The calendar reads like a document
+   you'd keep, not a dashboard. */
+:root {
+    --paper:   #FAF7F1;
+    --paper-2: #F3EEE4;
+    --ink:     #211D17;
+    --ink-2:   #4D463C;
+    --muted:   #837A6C;
+    --hair:    #E2DACB;
+    --hair-2:  #D3C9B6;
+    --red:     #C5283D;
+    --green:   #1E7A3C;
+    --amber:   #A86B0B;
+    --steel:   #2E5E8E;
+    --violet:  #5F4BA8;
+    --slate:   #9A9183;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: 'Albert Sans', system-ui, sans-serif;
+    font-size: 16.5px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(33,29,23,.04) 1px, transparent 0);
+    background-size: 30px 30px;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 clamp(18px, 5vw, 56px); }
+
+/* masthead */
+.masthead { padding: clamp(30px,5vw,52px) 0 clamp(22px,4vw,34px); border-bottom: 3px double var(--hair-2); position: relative; }
+.masthead::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--red) 0%, var(--red) 30%, transparent 30%, transparent 70%, var(--green) 70%, var(--green) 100%);
+}
+.kicker { font-family: 'Spline Sans Mono', monospace; font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 22px; }
+.kicker b { color: var(--ink); font-weight: 600; }
+h1 {
+    font-family: 'Fraunces', serif; font-optical-sizing: auto;
+    font-size: clamp(40px, 7vw, 76px); font-weight: 480; letter-spacing: -.015em;
+    line-height: 1.0; margin: 18px 0 14px;
+}
+h1 em { font-style: italic; font-weight: 380; color: var(--green); }
+.standfirst { font-size: clamp(16px, 2vw, 18.5px); color: var(--ink-2); max-width: 58ch; margin: 0 0 22px; }
+.profile-line { display: flex; flex-wrap: wrap; gap: 0 22px; font-size: 14px; color: var(--ink-2); }
+.profile-line span { display: inline-flex; gap: 7px; align-items: baseline; }
+.profile-line .k { font-family: 'Spline Sans Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.profile-line .v { font-weight: 600; }
+
+/* figures row */
+.figures { display: flex; flex-wrap: wrap; padding: 18px 0; border-bottom: 1px solid var(--hair); }
+.fig { padding: 0 26px 0 0; margin-right: 26px; border-right: 1px solid var(--hair); }
+.fig:last-child { border-right: 0; }
+.fig .n { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 540; line-height: 1; }
+.fig .l { font-family: 'Spline Sans Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-top: 5px; }
+
+/* filters — editorial text links */
+.filters { position: sticky; top: 0; z-index: 20; background: rgba(250,247,241,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hair); padding: 13px 0; display: flex; gap: 4px 20px; flex-wrap: wrap; align-items: baseline; }
+.filters .fl { font-family: 'Spline Sans Mono', monospace; font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.fb { background: none; border: 0; padding: 2px 0; font: 600 14.5px 'Albert Sans', sans-serif; color: var(--ink-2); cursor: pointer; border-bottom: 2px solid transparent; transition: color .14s, border-color .14s; }
+.fb:hover { color: var(--ink); }
+.fb.active { color: var(--ink); border-bottom-color: var(--green); }
+
+/* months */
+.month { padding-top: clamp(34px, 5vw, 52px); }
+.mh { display: flex; align-items: baseline; gap: 16px; margin-bottom: 6px; }
+.mh h2 { font-family: 'Fraunces', serif; font-style: italic; font-weight: 430; font-size: clamp(32px, 4.6vw, 46px); margin: 0; letter-spacing: -.01em; }
+.mh .yr { font-family: 'Spline Sans Mono', monospace; color: var(--muted); font-size: 13px; }
+.mh .cnt { margin-left: auto; font-family: 'Spline Sans Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+/* event rows */
+.row {
+    display: grid; grid-template-columns: 96px 1fr 168px; gap: 22px;
+    padding: 22px 0; border-top: 1px solid var(--hair); align-items: start;
+}
+.row:first-of-type { border-top: 2px solid var(--ink); }
+.row.dimmed { opacity: .55; }
+.date .mon { font-family: 'Spline Sans Mono', monospace; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.date .days { font-family: 'Fraunces', serif; font-size: 31px; font-weight: 500; line-height: 1.05; letter-spacing: -.01em; }
+.date .circ { font-family: 'Spline Sans Mono', monospace; font-size: 10.5px; color: var(--muted); margin-top: 6px; }
+
+.name { font-family: 'Fraunces', serif; font-size: 23px; font-weight: 560; letter-spacing: -.012em; line-height: 1.2; margin: 0 0 3px; }
+.loc { font-size: 14px; color: var(--muted); margin-bottom: 9px; }
+.cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.cat { font-family: 'Spline Sans Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: .04em; padding: 2.5px 8px; border: 1px solid var(--hair-2); border-radius: 3px; color: var(--muted); background: var(--paper); }
+.cat.on { border-color: var(--green); color: var(--green); background: rgba(30,122,60,.06); }
+.cat.on-nac { border-color: var(--red); color: var(--red); background: rgba(197,40,61,.06); }
+.note { font-size: 14.5px; color: var(--ink-2); line-height: 1.65; max-width: 62ch; padding-left: 14px; border-left: 2px solid var(--hair-2); }
+.conflict { display: block; margin-top: 6px; font-style: italic; color: var(--red); font-size: 13.5px; }
+
+/* tier column */
+.tier { text-align: right; padding-top: 4px; }
+.tlabel { display: inline-flex; align-items: center; gap: 8px; font-family: 'Spline Sans Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
+.tlabel .dot { width: 9px; height: 9px; border-radius: 50%; }
+.t-nac      { color: var(--red); }      .t-nac .dot      { background: var(--red); box-shadow: 0 0 0 3px rgba(197,40,61,.14); }
+.t-home     { color: var(--green); }    .t-home .dot     { background: var(--green); box-shadow: 0 0 0 3px rgba(30,122,60,.14); }
+.t-priority { color: var(--amber); }    .t-priority .dot { background: var(--amber); box-shadow: 0 0 0 3px rgba(168,107,11,.14); }
+.t-drive    { color: var(--steel); }    .t-drive .dot    { background: var(--steel); }
+.t-fly      { color: var(--violet); }   .t-fly .dot      { background: var(--violet); }
+.t-skip     { color: var(--slate); }    .t-skip .dot     { background: var(--slate); }
+.dist { font-size: 13px; color: var(--muted); margin-top: 7px; }
+.anchor-mark { display: inline-block; margin-top: 9px; font-family: 'Spline Sans Mono', monospace; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--ink); border-radius: 3px; padding: 2.5px 8px; }
+
+.row.hide { display: none; }
+.month.empty .mh { opacity: .45; }
+.nomatch { display: none; padding: 16px 0 26px; color: var(--muted); font-style: italic; font-size: 14.5px; border-top: 1px solid var(--hair); }
+.month.empty .nomatch { display: block; }
+
+.foot { margin: clamp(40px,6vw,64px) 0 60px; padding-top: 22px; border-top: 3px double var(--hair-2); font-size: 14.5px; color: var(--ink-2); line-height: 1.75; max-width: 70ch; }
+.foot b { font-family: 'Fraunces', serif; font-weight: 600; }
+
+@media (max-width: 720px) {
+    .row { grid-template-columns: 72px 1fr; }
+    .tier { grid-column: 2; text-align: left; padding-top: 0; display: flex; align-items: center; gap: 16px; }
+    .dist, .anchor-mark { margin-top: 0; }
+    .date .days { font-size: 25px; }
+    .name { font-size: 20px; }
+    .fig { padding-right: 18px; margin-right: 18px; }
+    .fig .n { font-size: 27px; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+    <header class="masthead">
+        <div class="kicker"><span><b>THEPISTE</b> · Season Program</span><span>USA Fencing · 2026–27</span></div>
+        <h1>Farren&rsquo;s season,<br><em>set in order.</em></h1>
+        <p class="standfirst">Fifty-one tournaments scored against one fencer: what to anchor, what to drive to, what to skip without guilt.</p>
+        <div class="profile-line">
+            <span><span class="k">Weapon</span><span class="v">Foil</span></span>
+            <span><span class="k">Age</span><span class="v">Junior</span></span>
+            <span><span class="k">Rating</span><span class="v">C → chasing a B</span></span>
+            <span><span class="k">Club</span><span class="v">FCC · Region 2</span></span>
+            <span><span class="k">Home</span><span class="v">Downers Grove, IL</span></span>
+        </div>
+    </header>
+
+    <div class="figures">
+        <div class="fig"><div class="n">38</div><div class="l">Eligible</div></div>
+        <div class="fig"><div class="n">5</div><div class="l">NACs</div></div>
+        <div class="fig"><div class="n">9</div><div class="l">Anchors</div></div>
+        <div class="fig"><div class="n">6</div><div class="l">Priority</div></div>
+        <div class="fig"><div class="n">11</div><div class="l">Drives</div></div>
+        <div class="fig"><div class="n">9</div><div class="l">Flights</div></div>
+    </div>
+
+    <nav class="filters">
+        <span class="fl">Show</span>
+        <button class="fb active" data-f="all">Everything</button>
+        <button class="fb" data-f="nonneg">Anchors</button>
+        <button class="fb" data-f="nac">NACs</button>
+        <button class="fb" data-f="priority">Priority + NAC</button>
+        <button class="fb" data-f="drive">Driveable</button>
+        <button class="fb" data-f="fly">Flights</button>
+        <button class="fb" data-f="region">Region 2</button>
+    </nav>
+
+    <section class="month" data-month="November 2026">
+        <div class="mh"><h2>November</h2><span class="yr">2026</span><span class="cnt">4 events</span></div>
+
+        <article class="row" data-tier="priority" data-nonneg="1" data-nac="0" data-region="1" data-drive="1">
+            <div class="date"><div class="mon">Nov</div><div class="days">6–8</div><div class="circ">RYC·RJCC·ROC</div></div>
+            <div>
+                <h3 class="name">GRAFA Third Coast Cup</h3>
+                <div class="loc">Grand Rapids, Michigan</div>
+                <div class="cats"><span class="cat on">JNR</span><span class="cat on">CDT</span><span class="cat on">D1A</span><span class="cat on">DV2</span></div>
+                <p class="note">160-mile drive, Region 2 points, and all four of Farren&rsquo;s categories on one weekend. The best points-per-dollar event of the fall.</p>
+            </div>
+            <div class="tier"><span class="tlabel t-priority"><span class="dot"></span>Priority</span><div class="dist">160 mi · drive</div><span class="anchor-mark">Anchor</span></div>
+        </article>
+
+        <article class="row dimmed" data-tier="skip" data-nonneg="0" data-nac="0" data-region="0" data-drive="0">
+            <div class="date"><div class="mon">Nov</div><div class="days">14–15</div><div class="circ">RYC·RJCC</div></div>
+            <div>
+                <h3 class="name">Pizza RYC/RJCC</h3>
+                <div class="loc">New Haven, Connecticut</div>
+                <div class="cats"><span class="cat on">JNR</span><span class="cat on">CDT</span></div>
+                <p class="note">858-mile flight for Region 3 points in two categories. A pass unless travel happens to line up.</p>
+            </div>
+            <div class="tier"><span class="tlabel t-skip"><span class="dot"></span>Pass</span><div class="dist">858 mi · flight</div></div>
+        </article>
+
+        <article class="row" data-tier="nac" data-nonneg="1" data-nac="1" data-region="0" data-drive="1">
+            <div class="date"><div class="mon">Nov</div><div class="days">20–23</div><div class="circ">NAC</div></div>
+            <div>
+                <h3 class="name">November NAC</h3>
+                <div class="loc">Columbus, Ohio</div>
+                <div class="cats"><span class="cat on-nac">D1A</span><span class="cat on-nac">JNR</span><span class="cat on-nac">CDT</span></div>
+                <p class="note">The season&rsquo;s second national checkpoint, and a drive rather than a flight. Junior and Div I-A on one strip &mdash; the best B-rating shot before January.</p>
+            </div>
+            <div class="tier"><span class="tlabel t-nac"><span class="dot"></span>NAC</span><div class="dist">355 mi · drive</div><span class="anchor-mark">Anchor</span></div>
+        </article>
+
+        <article class="row dimmed" data-tier="skip" data-nonneg="0" data-nac="0" data-region="0" data-drive="0">
+            <div class="date"><div class="mon">Nov</div><div class="days">27–29</div><div class="circ">SYC·RCC</div></div>
+            <div>
+                <h3 class="name">Cobra Challenge</h3>
+                <div class="loc">Secaucus, New Jersey</div>
+                <div class="cats"><span class="cat on">CDT</span><span class="cat">Y14</span></div>
+                <p class="note">788-mile flight, one eligible category, Thanksgiving weekend. Stay home.</p>
+            </div>
+            <div class="tier"><span class="tlabel t-skip"><span class="dot"></span>Pass</span><div class="dist">788 mi · flight</div></div>
+        </article>
+
+        <div class="nomatch">Nothing matches this filter in November.</div>
+    </section>
+
+    <section class="month" data-month="December 2026">
+        <div class="mh"><h2>December</h2><span class="yr">2026</span><span class="cnt">4 events</span></div>
+
+        <article class="row" data-tier="home" data-nonneg="1" data-nac="0" data-region="1" data-drive="1">
+            <div class="date"><div class="mon">Dec</div><div class="days">11–13</div><div class="circ">RYC·RJC</div></div>
+            <div>
+                <h3 class="name">FCC Chicago RYC &amp; RJC</h3>
+                <div class="loc">Libertyville, Illinois</div>
+                <div class="cats"><span class="cat on">JNR</span></div>
+                <p class="note">Home strip. Zero travel, familiar referees, the whole club on the sidelines. Non-negotiable.</p>
+            </div>
+            <div class="tier"><span class="tlabel t-home"><span class="dot"></span>Home Club</span><div class="dist">45 mi · drive</div><span class="anchor-mark">Anchor</span></div>
+        </article>
+
+        <article class="row" data-tier="fly" data-nonneg="0" data-nac="0" data-region="0" data-drive="0">
+            <div class="date"><div class="mon">Dec</div><div class="days">11–13</div><div class="circ">ROC·RJCC·RYC</div></div>
+            <div>
+                <h3 class="name">The Southern</h3>
+                <div class="loc">Myrtle Beach, South Carolina</div>
+                <div class="cats"><span class="cat on">JNR</span><span class="cat on">CDT</span><span class="cat on">D1A</span><span class="cat on">DV2</span></div>
+                <p class="note">Four categories, but 962 miles and Region 6 points.
+                    <span class="conflict">Clashes with FCC Chicago, which ranks higher this weekend.</span>
+                </p>
+            </div>
+            <div class="tier"><span class="tlabel t-fly"><span class="dot"></span>Fly Trip</span><div class="dist">962 mi · flight</div></div>
+        </article>
+
+        <article class="row" data-tier="fly" data-nonneg="0" data-nac="0" data-region="0" data-drive="0">
+            <div class="date"><div class="mon">Dec</div><div class="days">18–20</div><div class="circ">ROC·RJCC·RYC</div></div>
+            <div>
+                <h3 class="name">Fairfax Challenge</h3>
+                <div class="loc">Fredericksburg, Virginia</div>
+                <div class="cats"><span class="cat on">JNR</span><span class="cat on">CDT</span><span class="cat on">D1A</span><span class="cat on">DV2</span></div>
+                <p class="note">A strong four-category weekend, but it sits opposite the Midwest ROC at a quarter of the distance.
+                    <span class="conflict">Clashes with Midwest ROC/RJCC, which ranks higher this weekend.</span>
+                </p>
+            </div>
+            <div class="tier"><span class="tlabel t-fly"><span class="dot"></span>Fly Trip</span><div class="dist">760 mi · flight</div></div>
+        </article>
+
+        <article class="row" data-tier="priority" data-nonneg="1" data-nac="0" data-region="1" data-drive="1">
+            <div class="date"><div class="mon">Dec</div><div class="days">19–20</div><div class="circ">ROC·RJCC</div></div>
+            <div>
+                <h3 class="name">Midwest ROC/RJCC</h3>
+                <div class="loc">Libertyville, Illinois</div>
+                <div class="cats"><span class="cat on">JNR</span><span class="cat on">CDT</span><span class="cat on">D1A</span><span class="cat on">DV2</span></div>
+                <p class="note">45 miles from home, Region 2 points, all four categories. The easiest high-value weekend on the calendar.</p>
+            </div>
+            <div class="tier"><span class="tlabel t-priority"><span class="dot"></span>Priority</span><div class="dist">45 mi · drive</div><span class="anchor-mark">Anchor</span></div>
+        </article>
+
+        <div class="nomatch">Nothing matches this filter in December.</div>
+    </section>
+
+    <footer class="foot">
+        <b>How this program is set.</b> Every event is scored for Farren specifically: the categories she can enter (JNR, CDT, D1A, DV2), the distance from Downers Grove, whether it pays Region 2 points, and whether it collides with a bigger event the same weekend. NACs and home-club events are always anchors; in-region multi-category weekends become priorities; far single-category events fall to the back of the book.
+    </footer>
+</div>
+
+<script>
+document.querySelectorAll('.fb').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.fb').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    const f = b.dataset.f;
+    document.querySelectorAll('.row').forEach(r => {
+        const d = r.dataset;
+        const show = f === 'all'
+            || (f === 'nonneg' && d.nonneg === '1')
+            || (f === 'nac' && d.nac === '1')
+            || (f === 'priority' && (d.tier === 'priority' || d.nac === '1'))
+            || (f === 'drive' && d.drive === '1')
+            || (f === 'fly' && d.tier === 'fly')
+            || (f === 'region' && d.region === '1');
+        r.classList.toggle('hide', !show);
+    });
+    document.querySelectorAll('.month').forEach(m => {
+        m.classList.toggle('empty', !m.querySelector('.row:not(.hide)'));
+    });
+}));
+</script>
+</body>
+</html>

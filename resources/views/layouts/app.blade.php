@@ -6,21 +6,21 @@
     <title>{{ $title ?? 'ThePiste' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-    <header style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px clamp(16px,4vw,44px);background:var(--surface);border-bottom:1px solid var(--border);">
-        <a href="{{ url('/') }}" style="font-family:'Space Mono',monospace;font-weight:700;letter-spacing:.14em;color:var(--ink);text-decoration:none;">THEPISTE</a>
-        <nav style="display:flex;align-items:center;gap:14px;font-size:13.5px;">
+    <header class="topbar">
+        <a class="brand" href="{{ url('/') }}">THE<span>PISTE</span></a>
+        <nav>
             @auth
-                <span style="color:var(--muted);">{{ auth()->user()->name }}</span>
-                <form method="POST" action="{{ url('/logout') }}">@csrf
-                    <button class="btn btn-ghost" style="padding:6px 13px;font-size:13.5px;">Log out</button>
+                <span class="who">{{ auth()->user()->name }}</span>
+                <form method="POST" action="{{ url('/logout') }}" style="margin:0">@csrf
+                    <button class="bnav" type="submit">Log out</button>
                 </form>
             @endauth
             @guest
-                <a href="{{ url('/login') }}" class="btn btn-ghost" style="padding:6px 13px;font-size:13.5px;">Sign in</a>
+                <a class="bnav" href="{{ url('/login') }}">Sign in</a>
             @endguest
         </nav>
     </header>

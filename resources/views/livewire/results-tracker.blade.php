@@ -12,7 +12,7 @@
     <div class="panel" style="margin-bottom:24px;">
         <div class="row-between" style="margin-bottom:14px;">
             <strong style="font-size:15px;">{{ $fencer->goal ? ($goals[$fencer->goal] ?? 'Season goal') : 'No goal set yet' }}</strong>
-            <span style="font-family:'Space Mono',monospace;font-size:13px;color:var(--muted);">{{ ucfirst($fencer->weapon) }} · current {{ $fencer->rating }}</span>
+            <span style="font-family:'Martian Mono',monospace;font-size:13px;color:var(--muted);">{{ ucfirst($fencer->weapon) }} · current {{ $fencer->rating }}</span>
         </div>
 
         @if ($progress !== null)

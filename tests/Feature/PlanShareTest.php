@@ -120,7 +120,7 @@ class PlanShareTest extends TestCase
 
         $this->actingAs($user)->get('/season')
             ->assertOk()
-            ->assertSee('✓ IN PLAN')
+            ->assertSee('In Plan')
             ->assertSee('data-f="plan"', false);
     }
 }

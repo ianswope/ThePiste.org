@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style media="print">
         .no-print { display: none !important; }
@@ -52,7 +52,7 @@
                         <div class="bdate">{{ $t->starts_on->format('D M j') }}–{{ $t->ends_on->format('j') }} · {{ $t->region }}</div>
                         <div class="bname">{{ $t->name }}</div>
                         <div class="bmeta">
-                            <span>📍 {{ $t->city }}, {{ $t->state }}</span>
+                            <span>{{ $t->city }}, {{ $t->state }}</span>
                             @if ($r['distance'])<span>{{ round($r['distance']) }} mi · {{ $r['driveable'] ? 'drive' : 'fly' }}</span>@endif
                             @if (! empty($r['eligible']))<span>{{ implode(', ', $r['eligible']) }}</span>@endif
                             @if ($r['est_cost'])<span>~${{ number_format($r['est_cost']) }}</span>@endif

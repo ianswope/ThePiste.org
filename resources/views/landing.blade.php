@@ -7,13 +7,13 @@
     <meta name="description" content="A personalized USA Fencing season planner: set a goal, build the schedule that serves it, and track results toward your rating.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
 
 <div class="lnav">
-    <a class="brand" href="{{ url('/') }}">THEPISTE</a>
+    <a class="brand" href="{{ url('/') }}">THE<span>PISTE</span></a>
     <div class="links">
         <a href="{{ route('demo') }}">Sample</a>
         <a href="{{ url('/login') }}">Sign in</a>
@@ -22,16 +22,22 @@
 </div>
 
 <section class="hero">
-    <div class="hero-eye">USA Fencing · Season Planner</div>
-    <h1>Build a fencing season that <span class="mark">actually adds up</span>.</h1>
-    <p class="lead">
-        Every season is the same scramble: which tournaments matter, what's driveable, what collides,
-        and what it all costs. ThePiste turns your fencer's goal into a prioritized, personalized schedule,
-        then tracks the results that get you there.
-    </p>
-    <div class="hero-cta">
-        <a class="btn btn-primary btn-lg" href="{{ url('/register') }}">Build your season</a>
-        <a class="btn btn-ghost btn-lg" href="{{ route('demo') }}">See a sample &rarr;</a>
+    <div class="hero-inner">
+        <div class="light l" aria-hidden="true"></div>
+        <div class="hero-main">
+            <div class="hero-eye">USA Fencing · Season Planner</div>
+            <h1>Build a season that <span class="hl">actually adds up</span>.</h1>
+            <p class="lead">
+                Every season is the same scramble: which tournaments matter, what's driveable, what collides,
+                and what it all costs. ThePiste turns your fencer's goal into a prioritized, personalized schedule,
+                then tracks the results that get you there.
+            </p>
+            <div class="hero-cta">
+                <a class="btn btn-primary btn-lg" href="{{ url('/register') }}">Build your season</a>
+                <a class="btn btn-ghost btn-lg" href="{{ route('demo') }}">See a sample &rarr;</a>
+            </div>
+        </div>
+        <div class="light r" aria-hidden="true"></div>
     </div>
 </section>
 
@@ -80,7 +86,7 @@
 
 <div class="lfoot">
     <span>ThePiste · USA Fencing season planning</span>
-    <span><a href="{{ route('demo') }}" style="color:var(--green-ink);text-decoration:none;">View a sample season</a></span>
+    <span><a href="{{ route('demo') }}">View a sample season</a></span>
 </div>
 
 </body>
