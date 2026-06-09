@@ -16,6 +16,10 @@ echo ">> assets"
 npm ci
 npm run build
 
+echo ">> pre-migrate safety dump"
+mkdir -p /var/backups/mysql
+mysqldump --single-transaction --quick thepiste | gzip > "/var/backups/mysql/thepiste-predeploy-$(date +%Y%m%d-%H%M%S).sql.gz"
+
 echo ">> migrate + cache"
 php artisan migrate --force
 php artisan config:cache
