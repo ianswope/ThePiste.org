@@ -40,10 +40,10 @@
         </div>
         <div class="legend">
             <span class="leg"><span class="dot d-nac"></span> NAC / Non-Negotiable</span>
-            <span class="leg"><span class="dot" style="background:#C9A84C"></span> Priority</span>
+            <span class="leg"><span class="dot d-home"></span> Home Club</span>
+            <span class="leg"><span class="dot d-priority"></span> Priority</span>
             <span class="leg"><span class="dot d-drive"></span> Drive (≤{{ $fencer->driveRadius() }} mi)</span>
             <span class="leg"><span class="dot d-fly"></span> Fly Trip</span>
-            <span class="leg"><span class="dot" style="background:#C9A84C;box-shadow:0 0 0 2px #0B1F3A"></span> Home Club</span>
             <span class="leg"><span class="dot d-skip"></span> Lower Priority</span>
         </div>
     </div>
