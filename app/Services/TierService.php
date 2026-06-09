@@ -76,6 +76,11 @@ class TierService
         if ($isHome) {
             return 'home';
         }
+        // Club-level events never outrank circuit events: a nearby one is a
+        // training-mileage drive, a far one is a pass — never priority or fly.
+        if ($t->level === 'local') {
+            return $driveable && $inRegion ? 'drive' : 'skip';
+        }
         if ($inRegion && $eligibleCount >= $threshold) {
             return 'priority';
         }

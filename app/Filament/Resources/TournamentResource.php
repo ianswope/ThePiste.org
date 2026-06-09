@@ -37,7 +37,8 @@ class TournamentResource extends Resource
                     ->label('NAC / national event'),
                 Forms\Components\Select::make('level')
                     ->options([
-                        'regional' => 'Regional (USAF)',
+                        'local' => 'Local / club event',
+                        'regional' => 'Regional (USAF circuit)',
                         'national' => 'National (USAF)',
                         'fie_cadet' => 'FIE Cadet',
                         'fie_junior' => 'FIE Junior',

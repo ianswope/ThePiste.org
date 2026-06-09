@@ -7,6 +7,7 @@ function applyFilter(f) {
         let show = false;
         if (f === 'all') show = true;
         else if (f === 'plan') show = d.plan === '1';
+        else if (f === 'official') show = d.local !== '1';
         else if (f === 'nonneg') show = d.nonneg === '1';
         else if (f === 'nac') show = d.tier === 'nac';
         else if (f === 'priority') show = ['nac', 'home', 'priority'].includes(d.tier);

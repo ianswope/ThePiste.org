@@ -29,11 +29,13 @@ class AskFredSyncTest extends TestCase
         $this->assertSame(1, $parsed['skipped']['non_us']);        // Richmond BC
         $this->assertSame(1, $parsed['skipped']['no_categories']); // Y8-only
 
-        // A division-level "Junior Olympic Qualifier" is NOT a national event.
+        // A division-level "Junior Olympic Qualifier" is NOT a national event,
+        // and with no circuit designators it's a club-level (local) event.
         $qualifier = $parsed['rows'][1];
         $this->assertSame('CT Division Junior Olympic Qualifiers', $qualifier['name']);
         $this->assertSame('', $qualifier['is_nac']);
         $this->assertSame('R3', $qualifier['region']);
+        $this->assertSame('local', $qualifier['level']);
 
         $row = $parsed['rows'][0];
         $this->assertSame('Badger Open ROC & RJCC', $row['name']);
@@ -43,6 +45,7 @@ class AskFredSyncTest extends TestCase
         $this->assertSame('WI', $row['state']);
         $this->assertSame('R2', $row['region']);
         $this->assertSame('ROC|RJCC', $row['circuits']);
+        $this->assertSame('regional', $row['level']); // circuit designators = official
         $this->assertSame('JNR|CDT|Y12|OPEN', $row['contested_events']);
         $this->assertStringContainsString('aaaaaaaa-1111-2222-3333-444444444444', $row['source_url']);
     }

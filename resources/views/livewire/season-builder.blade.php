@@ -39,7 +39,7 @@
                     @endphp
                     <div class="brow t-{{ $r['tier'] }} {{ $sel ? 'selected' : '' }} {{ $clash ? 'clashing' : '' }}" wire:key="row-{{ $t->id }}">
                         <div class="bmain">
-                            <div class="bdate">{{ $t->starts_on->format('M j') }} · {{ $t->region }}{{ $t->country !== 'US' ? ' · '.$t->country : '' }}</div>
+                            <div class="bdate">{{ $t->starts_on->format('M j') }} · {{ $t->region }}@if($t->circuits) · {{ implode('/', $t->circuits) }}@endif{{ $t->level === 'local' ? ' · CLUB' : '' }}{{ $t->country !== 'US' ? ' · '.$t->country : '' }}</div>
                             <div class="bname">{{ $t->name }}</div>
                             <div class="bmeta">
                                 <span>📍 {{ $t->city }}, {{ $t->state }}</span>

@@ -100,6 +100,7 @@ class AskFredScraper
             $isNac = preg_match('/\b(NAC|North American Cup|Junior Olympic|National Championship)/i', $name)
                 && ! preg_match('/qualif/i', $name);
             preg_match_all('/\b(ROC|RJCC|RYC|SYC|RCC|RPC)\b/i', $name, $circuits);
+            $circuitList = array_unique(array_map('strtoupper', $circuits[1]));
 
             $rows[] = [
                 'name' => $name,
@@ -109,7 +110,9 @@ class AskFredScraper
                 'state' => $state,
                 'region' => $isNac ? 'NATIONAL' : (config('fencing.state_regions')[$state] ?? 'R?'),
                 'is_nac' => $isNac ? 'yes' : '',
-                'circuits' => implode('|', array_unique(array_map('strtoupper', $circuits[1]))),
+                // Official circuit events carry designators; everything else is club-level.
+                'level' => $isNac ? 'national' : ($circuitList !== [] ? 'regional' : 'local'),
+                'circuits' => implode('|', $circuitList),
                 'contested_events' => implode('|', $categories),
                 'host_club' => '',
                 'curated_note' => '',

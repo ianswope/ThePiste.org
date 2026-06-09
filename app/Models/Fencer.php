@@ -11,7 +11,7 @@ class Fencer extends Model
     protected $fillable = [
         'user_id', 'home_club_id', 'name', 'gender', 'handedness', 'birth_year',
         'usa_fencing_id', 'weapon', 'age_group', 'rating',
-        'home_zip', 'home_lat', 'home_lng', 'goal', 'include_fie', 'drive_radius_miles',
+        'home_zip', 'home_state', 'home_lat', 'home_lng', 'goal', 'include_fie', 'drive_radius_miles',
     ];
 
     protected $casts = [
@@ -81,10 +81,11 @@ class Fencer extends Model
         return config("fencing.eligibility.{$this->age_group}", []);
     }
 
-    /** USA Fencing region, derived from the home club (fallback for v1). */
+    /** USA Fencing region: home club's region, else derived from the home state. */
     public function region(): ?string
     {
-        return $this->homeClub?->region;
+        return $this->homeClub?->region
+            ?? ($this->home_state ? (config('fencing.state_regions')[$this->home_state] ?? null) : null);
     }
 
     public function driveRadius(): int

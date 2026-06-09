@@ -153,6 +153,7 @@ class FencerController extends Controller
         if ($geo = $geocoder->lookup($fencer->home_zip)) {
             $fencer->home_lat = $geo['lat'];
             $fencer->home_lng = $geo['lng'];
+            $fencer->home_state = $geo['state'];
         }
     }
 
