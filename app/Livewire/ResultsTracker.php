@@ -2,9 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\ResolvesActiveFencer;
 use App\Models\Fencer;
 use App\Models\Result;
-use App\Models\Season;
 use App\Services\ResultRecorder;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -12,9 +12,7 @@ use Livewire\Component;
 #[Layout('layouts.builder')]
 class ResultsTracker extends Component
 {
-    public Fencer $fencer;
-
-    public Season $season;
+    use ResolvesActiveFencer;
 
     // add-result form
     public ?int $tournament_id = null;
@@ -39,13 +37,10 @@ class ResultsTracker extends Component
 
     public function mount()
     {
-        $fencers = auth()->user()->fencers()->with('weapons')->get();
-        if ($fencers->isEmpty()) {
-            return redirect()->route('fencers.create');
+        if ($redirect = $this->resolveActiveFencer(['weapons'])) {
+            return $redirect;
         }
 
-        $this->fencer = $fencers->firstWhere('id', session('active_fencer_id')) ?? $fencers->first();
-        $this->season = Season::where('is_active', true)->first() ?? Season::firstOrFail();
         $this->weapon = $this->fencer->weapon;
         $this->fenced_on = now()->toDateString();
     }

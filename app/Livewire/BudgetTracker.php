@@ -2,9 +2,8 @@
 
 namespace App\Livewire;
 
-use App\Models\Fencer;
+use App\Livewire\Concerns\ResolvesActiveFencer;
 use App\Models\PlanItem;
-use App\Models\Season;
 use App\Models\SeasonPlan;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
@@ -19,9 +18,7 @@ use Livewire\Component;
 #[Layout('layouts.builder')]
 class BudgetTracker extends Component
 {
-    public Fencer $fencer;
-
-    public Season $season;
+    use ResolvesActiveFencer;
 
     public SeasonPlan $plan;
 
@@ -41,13 +38,10 @@ class BudgetTracker extends Component
 
     public function mount()
     {
-        $fencers = auth()->user()->fencers()->get();
-        if ($fencers->isEmpty()) {
-            return redirect()->route('fencers.create');
+        if ($redirect = $this->resolveActiveFencer()) {
+            return $redirect;
         }
 
-        $this->fencer = $fencers->firstWhere('id', session('active_fencer_id')) ?? $fencers->first();
-        $this->season = Season::where('is_active', true)->first() ?? Season::firstOrFail();
         $this->plan = $this->fencer->seasonPlans()->firstOrCreate(['season_id' => $this->season->id]);
         $this->budget = $this->plan->budget !== null ? (string) $this->plan->budget : null;
 

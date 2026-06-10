@@ -51,4 +51,32 @@ class Tournament extends Model
 
         return collect([$this->city, $region])->filter()->implode(', ');
     }
+
+    /** National-level event (NAC, JO, Championship): long registration lead. */
+    public function isNational(): bool
+    {
+        return (bool) $this->is_nac || $this->level === 'national';
+    }
+
+    /** FIE / international event (opt-in per fencer; never an auto-anchor). */
+    public function isInternational(): bool
+    {
+        return str_starts_with((string) $this->level, 'fie');
+    }
+
+    /**
+     * Compact date span, e.g. "Aug 22–23", "Dec 19–Jan 2", or "Oct 9" for a
+     * one-day event. Pass $weekday to prefix the start with its day name.
+     */
+    public function dateRange(bool $weekday = false): string
+    {
+        $startFormat = $weekday ? 'D M j' : 'M j';
+        if ($this->ends_on->isSameDay($this->starts_on)) {
+            return $this->starts_on->format($startFormat);
+        }
+
+        $endFormat = $this->ends_on->month === $this->starts_on->month ? 'j' : 'M j';
+
+        return $this->starts_on->format($startFormat).'–'.$this->ends_on->format($endFormat);
+    }
 }

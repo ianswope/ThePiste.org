@@ -31,7 +31,7 @@ class TierService
 
         $rows = $tournaments
             // FIE events are opt-in per fencer.
-            ->reject(fn (Tournament $t) => str_starts_with((string) $t->level, 'fie') && ! $fencer->include_fie)
+            ->reject(fn (Tournament $t) => $t->isInternational() && ! $fencer->include_fie)
             ->sortBy(fn (Tournament $t) => $t->starts_on->timestamp)
             ->values()
             ->map(function (Tournament $t) use ($fencer, $eligibleCats, $fencerRegion, $radius, $threshold, $goals) {
@@ -80,7 +80,7 @@ class TierService
             return 'ineligible';
         }
         // FIE / international events are always fly trips, never auto-anchors.
-        if (str_starts_with((string) $t->level, 'fie')) {
+        if ($t->isInternational()) {
             return 'fly';
         }
         if ($t->is_nac) {

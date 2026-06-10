@@ -31,12 +31,10 @@ class PlanItem extends Model
         return $this->hasMany(Expense::class);
     }
 
-    /** Best known cost for one category: actual once entered, else estimate. */
+    /** Best known cost for one category: actual once entered, else estimate (null if untracked). */
     public function categoryAmount(string $category): ?float
     {
-        $expense = $this->expenses->firstWhere('category', $category);
-
-        return $expense?->actual_amount ?? $expense?->est_amount;
+        return $this->expenses->firstWhere('category', $category)?->effective();
     }
 
     /**

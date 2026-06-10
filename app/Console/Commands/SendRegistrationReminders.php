@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Concerns\SendsDigests;
 use App\Models\PlanItem;
 use App\Models\Tournament;
 use App\Notifications\RegistrationReminderDigest;
@@ -9,6 +10,8 @@ use Illuminate\Console\Command;
 
 class SendRegistrationReminders extends Command
 {
+    use SendsDigests;
+
     protected $signature = 'thepiste:send-registration-reminders
         {--dry-run : Report who would be emailed without sending or marking}';
 
@@ -58,14 +61,11 @@ class SendRegistrationReminders extends Command
             // Mark reminded per successfully-sent user, so a failed send leaves
             // that user's items to be retried on the next run instead of being
             // silently marked done.
-            try {
-                $user->notify(new RegistrationReminderDigest($groups));
+            if ($this->notifyOrLog($user, new RegistrationReminderDigest($groups))) {
                 $remindedIds = array_merge($remindedIds, $items->pluck('id')->all());
                 $sent++;
-            } catch (\Throwable $e) {
+            } else {
                 $failed++;
-                $this->warn("  ! reminder to {$user->email} failed: {$e->getMessage()}");
-                logger()->error('Registration reminder failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
             }
         }
 
@@ -85,7 +85,7 @@ class SendRegistrationReminders extends Command
     {
         $leads = config('fencing.reminder_lead_days');
 
-        return $t->is_nac || $t->level === 'national' || str_starts_with((string) $t->level, 'fie')
+        return $t->isNational() || $t->isInternational()
             ? $leads['national']
             : $leads['default'];
     }

@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Concerns\SendsDigests;
+use App\Models\Season;
 use App\Models\Tournament;
 use App\Models\User;
 use App\Notifications\NewEventsDigest;
@@ -10,6 +12,8 @@ use Illuminate\Console\Command;
 
 class NotifyNewEvents extends Command
 {
+    use SendsDigests;
+
     protected $signature = 'thepiste:notify-new-events
         {--dry-run : Report who would be emailed without sending or marking}';
 
@@ -22,7 +26,13 @@ class NotifyNewEvents extends Command
     {
         $dry = (bool) $this->option('dry-run');
 
-        $new = Tournament::whereNull('alerted_at')
+        // Scope to the active season: the digest links to the season builder,
+        // which only shows that season — alerting on a future season's freshly
+        // imported events would point at a builder that doesn't list them.
+        $season = Season::where('is_active', true)->first() ?? Season::firstOrFail();
+
+        $new = Tournament::where('season_id', $season->id)
+            ->whereNull('alerted_at')
             ->whereDate('starts_on', '>=', now())
             ->with('hostClub')
             ->get();
@@ -35,7 +45,12 @@ class NotifyNewEvents extends Command
 
         $sent = 0;
         $failed = 0;
-        foreach (User::whereHas('fencers')->with('fencers.homeClub')->get() as $user) {
+        // Eager-load goals (used per fencer by TierService) and the home club so
+        // evaluating relevance for every user is a couple of queries, not N.
+        $users = User::whereHas('fencers')
+            ->with(['fencers.homeClub', 'fencers.goals'])
+            ->get();
+        foreach ($users as $user) {
             $groups = [];
             foreach ($user->fencers as $fencer) {
                 $rows = $tiers->evaluate($fencer, $new)
@@ -58,16 +73,7 @@ class NotifyNewEvents extends Command
                 continue;
             }
 
-            // One bad recipient must not abort the run and re-spam everyone
-            // already emailed when the next run re-finds the same events.
-            try {
-                $user->notify(new NewEventsDigest($groups));
-                $sent++;
-            } catch (\Throwable $e) {
-                $failed++;
-                $this->warn("  ! digest to {$user->email} failed: {$e->getMessage()}");
-                logger()->error('New-events digest failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-            }
+            $this->notifyOrLog($user, new NewEventsDigest($groups)) ? $sent++ : $failed++;
         }
 
         // Mark the events considered so they never re-alert — unless every

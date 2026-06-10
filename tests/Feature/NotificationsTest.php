@@ -11,6 +11,7 @@ use App\Notifications\RegistrationReminderDigest;
 use Illuminate\Contracts\Notifications\Dispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\ChannelManager;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -170,6 +171,28 @@ class NotificationsTest extends TestCase
         Notification::assertNothingSentTo($user);
     }
 
+    public function test_new_event_alerts_are_scoped_to_the_active_season(): void
+    {
+        $user = $this->makeUser();
+
+        // A future season's catalog imported early (e.g. before is_active flips).
+        $next = Season::create([
+            'name' => '2027-28', 'slug' => '2027-28',
+            'starts_on' => now()->addYear(), 'ends_on' => now()->addYear()->addMonths(10),
+            'is_active' => false,
+        ]);
+        $offSeason = $this->makeTournament([
+            'name' => 'Next Season RJCC', 'starts_on' => now()->addYear()->addMonth(),
+        ]);
+        $offSeason->update(['season_id' => $next->id]);
+
+        $this->artisan('thepiste:notify-new-events')->assertSuccessful();
+
+        // The off-season event must not be alerted (the builder wouldn't list it)...
+        Notification::assertNothingSentTo($user);
+        $this->assertNull($offSeason->fresh()->alerted_at);
+    }
+
     public function test_digest_subject_counts_distinct_tournaments_not_per_fencer_rows(): void
     {
         $user = $this->makeUser();
@@ -202,6 +225,18 @@ class NotificationsTest extends TestCase
 
         $this->assertSame('Paris, FR', $intl->location());
         $this->assertSame('Chicago, IL', $domestic->location());
+    }
+
+    public function test_date_range_handles_single_same_month_and_cross_month(): void
+    {
+        $oneDay = $this->makeTournament(['starts_on' => Carbon::parse('2026-10-09'), 'ends_on' => '2026-10-09']);
+        $sameMonth = $this->makeTournament(['starts_on' => Carbon::parse('2026-08-22'), 'ends_on' => '2026-08-23']);
+        $crossMonth = $this->makeTournament(['starts_on' => Carbon::parse('2026-12-30'), 'ends_on' => '2027-01-02']);
+
+        $this->assertSame('Oct 9', $oneDay->dateRange());
+        $this->assertSame('Aug 22–23', $sameMonth->dateRange());
+        $this->assertSame('Dec 30–Jan 2', $crossMonth->dateRange());
+        $this->assertSame('Sat Aug 22–23', $sameMonth->dateRange(true));
     }
 
     /** Replace the notifications dispatcher so notify() throws for chosen emails. */

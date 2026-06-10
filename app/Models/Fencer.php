@@ -53,7 +53,11 @@ class Fencer extends Model
 
     public function activeGoals()
     {
-        return $this->goals()->active()->get();
+        // Use the eager-loaded relation when present (e.g. the digest commands
+        // load goals for the whole fleet) to avoid a query per fencer.
+        return $this->relationLoaded('goals')
+            ? $this->goals->where('status', 'active')->values()
+            : $this->goals()->active()->get();
     }
 
     /** Letter rating ladder, lowest to highest. */

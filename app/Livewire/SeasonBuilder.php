@@ -2,8 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\Fencer;
-use App\Models\Season;
+use App\Livewire\Concerns\ResolvesActiveFencer;
 use App\Models\SeasonPlan;
 use App\Services\TierService;
 use Illuminate\Support\Collection;
@@ -15,9 +14,7 @@ use Livewire\Component;
 #[Layout('layouts.builder')]
 class SeasonBuilder extends Component
 {
-    public Fencer $fencer;
-
-    public Season $season;
+    use ResolvesActiveFencer;
 
     public SeasonPlan $plan;
 
@@ -42,13 +39,10 @@ class SeasonBuilder extends Component
 
     public function mount()
     {
-        $fencers = auth()->user()->fencers()->get();
-        if ($fencers->isEmpty()) {
-            return redirect()->route('fencers.create');
+        if ($redirect = $this->resolveActiveFencer()) {
+            return $redirect;
         }
 
-        $this->fencer = $fencers->firstWhere('id', session('active_fencer_id')) ?? $fencers->first();
-        $this->season = Season::where('is_active', true)->first() ?? Season::firstOrFail();
         $this->plan = $this->fencer->seasonPlans()->firstOrCreate(['season_id' => $this->season->id]);
         if (! $this->plan->share_slug) {
             $this->plan->update(['share_slug' => Str::random(24)]);

@@ -49,7 +49,7 @@
                 @php($t = $r['tournament'])
                 <div class="brow t-{{ $r['tier'] }}">
                     <div class="bmain">
-                        <div class="bdate">{{ $t->starts_on->format('D M j') }}–{{ $t->ends_on->format('j') }} · {{ $t->region }}</div>
+                        <div class="bdate">{{ $t->dateRange(true) }} · {{ $t->region }}</div>
                         <div class="bname">{{ $t->name }}</div>
                         <div class="bmeta">
                             <span>{{ $t->location() }}</span>

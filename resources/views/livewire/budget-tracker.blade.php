@@ -73,7 +73,7 @@
                         <tr wire:key="budget-item-{{ $item->id }}" class="{{ $item->status === 'skipped' ? 'skipped' : '' }}">
                             <td style="text-align:left;">
                                 <div class="bt-name">{{ $t->name }}</div>
-                                <div class="bt-meta">{{ $t->starts_on->format('M j') }}{{ $t->ends_on->ne($t->starts_on) ? '–'.$t->ends_on->format($t->ends_on->month === $t->starts_on->month ? 'j' : 'M j') : '' }} · {{ $t->location() }}</div>
+                                <div class="bt-meta">{{ $t->dateRange() }} · {{ $t->location() }}</div>
                             </td>
                             @foreach ($categories as $key => $label)
                                 @php $est = $item->expenses->firstWhere('category', $key)?->est_amount; @endphp
