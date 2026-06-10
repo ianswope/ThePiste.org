@@ -2,6 +2,8 @@
 
 namespace App\Notifications;
 
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -11,10 +13,14 @@ use Illuminate\Notifications\Notification;
  * Subclasses supply the subject, intro, how to pull and format each fencer's
  * rows, and the closing call to action.
  *
- * $groups is [['fencer' => Fencer, <rows-key> => [...]], ...].
+ * Queued: the scheduled commands enqueue these and return immediately, and a
+ * delivery failure retries (then lands in failed_jobs) instead of blocking the
+ * run. $groups is [['fencer' => Fencer, <rows-key> => [...]], ...].
  */
-abstract class FencerDigest extends Notification
+abstract class FencerDigest extends Notification implements ShouldQueue
 {
+    use Queueable;
+
     public function __construct(public array $groups) {}
 
     public function via(object $notifiable): array

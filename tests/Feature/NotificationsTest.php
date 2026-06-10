@@ -239,6 +239,30 @@ class NotificationsTest extends TestCase
         $this->assertSame('Sat Aug 22–23', $sameMonth->dateRange(true));
     }
 
+    public function test_queued_digests_survive_serialization(): void
+    {
+        // ShouldQueue means the payload (models nested in $groups) is serialized
+        // to the queue and rebuilt in the worker — it must round-trip and render.
+        $user = $this->makeUser();
+        $fencer = $user->fencers()->first();
+        $event = $this->makeTournament(['name' => 'Serialize Me RJCC']);
+
+        $newEvents = new NewEventsDigest([
+            ['fencer' => $fencer, 'rows' => [['tournament' => $event, 'note' => '120 mi drive']]],
+        ]);
+
+        $plan = SeasonPlan::create(['fencer_id' => $fencer->id, 'season_id' => $this->season->id]);
+        $item = $plan->items()->create(['tournament_id' => $event->id])->load('tournament');
+        $reminder = new RegistrationReminderDigest([
+            ['fencer' => $fencer, 'items' => [$item]],
+        ]);
+
+        foreach ([$newEvents, $reminder] as $digest) {
+            $restored = unserialize(serialize($digest));
+            $this->assertStringContainsString('Serialize Me RJCC', $restored->toMail($user)->render());
+        }
+    }
+
     /** Replace the notifications dispatcher so notify() throws for chosen emails. */
     private function failNotificationsFor(array $emails): void
     {
