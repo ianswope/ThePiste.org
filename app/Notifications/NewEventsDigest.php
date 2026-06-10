@@ -4,7 +4,6 @@ namespace App\Notifications;
 
 use App\Models\Fencer;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 
 /**
  * One email per user after a catalog sync: the newly-added events that
@@ -12,43 +11,50 @@ use Illuminate\Notifications\Notification;
  * thepiste:notify-new-events; events are marked alerted_at so they never
  * appear in a digest twice.
  */
-class NewEventsDigest extends Notification
+class NewEventsDigest extends FencerDigest
 {
     /** @param array<int, array{fencer: Fencer, rows: array}> $groups */
-    public function __construct(public array $groups) {}
-
-    public function via(object $notifiable): array
+    public function __construct(public array $groups)
     {
-        return ['mail'];
+        parent::__construct($groups);
     }
 
-    public function toMail(object $notifiable): MailMessage
+    /** Distinct tournaments, not per-fencer rows: two fencers, one event reads "a", not "2". */
+    private function eventCount(): int
     {
-        // Count distinct tournaments, not per-fencer rows: a household with two
-        // eligible fencers shouldn't read "4 new tournaments" for the same two.
-        $count = collect($this->groups)
+        return collect($this->groups)
             ->flatMap(fn ($g) => array_column($g['rows'], 'tournament'))
             ->unique(fn ($t) => $t->id)
             ->count();
+    }
 
-        $mail = (new MailMessage)
-            ->subject($count === 1
-                ? 'A new tournament fits your season'
-                : "{$count} new tournaments fit your season")
-            ->greeting('Hi '.($notifiable->name ?: 'there').',')
-            ->line('The catalog just picked up '.($count === 1 ? 'an event' : 'some events').' worth a look:');
+    protected function subject(): string
+    {
+        return $this->eventCount() === 1
+            ? 'A new tournament fits your season'
+            : "{$this->eventCount()} new tournaments fit your season";
+    }
 
-        foreach ($this->groups as $group) {
-            $mail->line("**{$group['fencer']->name}**");
-            foreach ($group['rows'] as $row) {
-                $t = $row['tournament'];
-                $mail->line("- **{$t->name}** · {$t->starts_on->format('D M j')} · {$t->location()} — {$row['note']}");
-            }
-        }
+    protected function intro(): array
+    {
+        return ['The catalog just picked up '.($this->eventCount() === 1 ? 'an event' : 'some events').' worth a look:'];
+    }
 
-        return $mail
-            ->action('Open the season builder', route('season.build'))
-            ->line('Add the keepers to the plan; skip the rest and they stay out of your way.')
-            ->salutation('— ThePiste');
+    protected function rowsOf(array $group): iterable
+    {
+        return $group['rows'];
+    }
+
+    protected function formatRow($row): string
+    {
+        $t = $row['tournament'];
+
+        return "**{$t->name}** · {$t->starts_on->format('D M j')} · {$t->location()} — {$row['note']}";
+    }
+
+    protected function callToAction(MailMessage $mail): void
+    {
+        $mail->action('Open the season builder', route('season.build'))
+            ->line('Add the keepers to the plan; skip the rest and they stay out of your way.');
     }
 }

@@ -6,6 +6,7 @@ use App\Livewire\Concerns\ResolvesActiveFencer;
 use App\Models\PlanItem;
 use App\Models\SeasonPlan;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -51,7 +52,7 @@ class BudgetTracker extends Component
     private function loadRows(): void
     {
         $this->amounts = [];
-        foreach ($this->items() as $item) {
+        foreach ($this->items as $item) {
             $this->statuses[$item->id] = $item->status;
             $this->paids[$item->id] = $item->paid;
             foreach (array_keys(config('fencing.expense_categories')) as $cat) {
@@ -62,8 +63,15 @@ class BudgetTracker extends Component
         }
     }
 
-    /** @return Collection<int, PlanItem> */
-    private function items()
+    /**
+     * The plan's items in date order, with tournament + expenses loaded.
+     * Memoized for the request (accessed in both loadRows and render); write
+     * hooks unset it so a re-render after an edit recomputes fresh.
+     *
+     * @return Collection<int, PlanItem>
+     */
+    #[Computed]
+    public function items()
     {
         return $this->plan->items()->with(['tournament', 'expenses'])->get()
             ->sortBy(fn (PlanItem $i) => $i->tournament->starts_on)
@@ -115,12 +123,14 @@ class BudgetTracker extends Component
         }
 
         $this->amounts[(int) $itemId][$category] = $amount !== null ? (string) $amount : null;
+        unset($this->items); // the edited expense must show in this render
     }
 
     public function updatedStatuses($value, $key): void
     {
         if (in_array($value, PlanItem::STATUSES, true)) {
             $this->plan->items()->whereKey((int) $key)->update(['status' => $value]);
+            unset($this->items);
         }
     }
 
@@ -128,12 +138,13 @@ class BudgetTracker extends Component
     {
         if (in_array($value, PlanItem::PAID_STATES, true)) {
             $this->plan->items()->whereKey((int) $key)->update(['paid' => $value]);
+            unset($this->items);
         }
     }
 
     public function render()
     {
-        $items = $this->items();
+        $items = $this->items;
         $this->plan->setRelation('items', $items);
 
         return view('livewire.budget-tracker', [
