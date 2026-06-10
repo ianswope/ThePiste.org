@@ -135,8 +135,17 @@ class SeasonBuilder extends Component
     public function updatedCosts($value, $key): void
     {
         $id = (int) $key;
+        $item = $this->plan->items()->with('expenses')->where('tournament_id', $id)->first();
+
+        // The builder's inline field is only a ballpark for events not yet
+        // itemized. Once the budget page breaks an event into categories, that
+        // page owns its cost — ignore stale edits here so the two never fight.
+        if (! $item || $item->expenses->isNotEmpty()) {
+            return;
+        }
+
         $cost = is_numeric($value) ? max(0, (float) $value) : null;
-        $this->plan->items()->where('tournament_id', $id)->update(['est_cost' => $cost]);
+        $item->update(['est_cost' => $cost]);
         $this->costs[$id] = $cost;
     }
 
@@ -162,14 +171,31 @@ class SeasonBuilder extends Component
             ->values()
             ->all();
 
+        // Plan items keyed by tournament, so the rows can show the itemized
+        // total (and lock the inline field) once an event has expenses.
+        $planItems = $this->plan->items()->with('expenses')->get()->keyBy('tournament_id');
+
+        // Budget tile sums the events actually shown here (visible, selected,
+        // not skipped) so it matches the count beside it — skipped events and
+        // any now-ineligible plan items drop out, same rule as the budget page.
+        // Filter by tournament_id rather than Collection::only(), whose Eloquent
+        // override keys off the plan-item id, not the array key.
+        $chosenIds = $chosen->map(fn ($r) => (int) $r['tournament']->id)->values()->all();
+        $estCost = round(
+            $planItems
+                ->filter(fn ($i) => in_array((int) $i->tournament_id, $chosenIds, true) && $i->status !== 'skipped')
+                ->sum(fn ($i) => $i->effectiveTotal())
+        );
+
         return view('livewire.season-builder', [
             'sections' => $sections,
+            'planItems' => $planItems,
             'tally' => [
                 'count' => $chosen->count(),
                 'nacs' => $chosen->where('is_nac', true)->count(),
                 'drives' => $chosen->filter(fn ($r) => $r['driveable'])->count(),
                 'flights' => $chosen->filter(fn ($r) => ! $r['driveable'] && $r['distance'] !== null)->count(),
-                'est_cost' => round($this->plan->items()->with('expenses')->get()->sum(fn ($i) => $i->effectiveTotal())),
+                'est_cost' => $estCost,
             ],
             'selectedIds' => $sel,
             'clashIds' => $clashes,

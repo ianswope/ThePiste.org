@@ -106,8 +106,13 @@
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;">
                             @if ($sel)
-                                <span class="costwrap">$<input class="input costinput" type="number" min="0" step="25"
-                                    wire:model.blur="costs.{{ $t->id }}" placeholder="cost"></span>
+                                @php $pi = $planItems[$t->id] ?? null; @endphp
+                                @if ($pi && $pi->expenses->isNotEmpty())
+                                    <a class="costwrap itemized" href="{{ route('season.budget') }}" title="Itemized on the budget page">~${{ number_format($pi->effectiveTotal()) }}</a>
+                                @else
+                                    <span class="costwrap">$<input class="input costinput" type="number" min="0" step="25"
+                                        wire:model.blur="costs.{{ $t->id }}" placeholder="cost"></span>
+                                @endif
                             @endif
                             <button class="btoggle" wire:click="toggle({{ $t->id }})" wire:loading.attr="disabled">
                                 {{ $sel ? '✓ In plan' : '+ Add' }}

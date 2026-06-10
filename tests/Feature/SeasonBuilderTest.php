@@ -70,4 +70,46 @@ class SeasonBuilderTest extends TestCase
         $component->call('toggle', $airForce->id);
         $this->assertFalse($plan->items()->where('tournament_id', $airForce->id)->exists());
     }
+
+    public function test_inline_cost_is_ignored_once_event_is_itemized(): void
+    {
+        $user = $this->makeFencer();
+        $this->actingAs($user);
+
+        $nac = Tournament::where('name', 'October NAC')->firstOrFail();
+        Livewire::test(SeasonBuilder::class); // seeds anchors (incl. the NAC)
+        $item = $user->fencers()->first()->seasonPlans()->first()
+            ->items()->where('tournament_id', $nac->id)->firstOrFail();
+
+        // Itemize the trip on the budget side.
+        $item->expenses()->create(['category' => 'fees', 'est_amount' => 300]);
+
+        // The builder's inline ballpark must not overwrite the itemized trip.
+        Livewire::test(SeasonBuilder::class)
+            ->set("costs.{$nac->id}", 9999)
+            ->assertSee('~$300');   // read-only itemized total, not an input
+
+        $this->assertNull($item->fresh()->est_cost);
+        $this->assertSame(300.0, $item->fresh()->load('expenses')->effectiveTotal());
+    }
+
+    public function test_builder_tally_excludes_skipped_items(): void
+    {
+        $user = $this->makeFencer();
+        $this->actingAs($user);
+
+        $nac = Tournament::where('name', 'October NAC')->firstOrFail();
+        Livewire::test(SeasonBuilder::class)->set("costs.{$nac->id}", 1200);
+
+        $plan = $user->fencers()->first()->seasonPlans()->first();
+        $item = $plan->items()->where('tournament_id', $nac->id)->firstOrFail();
+
+        // Counts while planned...
+        Livewire::test(SeasonBuilder::class)->assertSee('1,200');
+
+        // ...drops out of the Budget tile once skipped.
+        $item->update(['status' => 'skipped']);
+        $this->assertSame(0.0, $plan->fresh()->projectedTotal());
+        Livewire::test(SeasonBuilder::class)->assertDontSee('1,200');
+    }
 }

@@ -149,4 +149,20 @@ class McpConnectorTest extends TestCase
             ->assertSee('target_rating')
             ->assertSee('season_stats');
     }
+
+    public function test_get_plan_excludes_skipped_events(): void
+    {
+        $user = $this->makeUser();
+        $plan = $user->fencers()->first()->seasonPlans()->firstOrCreate([
+            'season_id' => Tournament::first()->season_id,
+        ]);
+        $nac = Tournament::where('name', 'October NAC')->firstOrFail();
+        $plan->items()->create(['tournament_id' => $nac->id, 'status' => 'skipped']);
+
+        // A skipped event must not appear in the plan the MCP reports.
+        ThePisteServer::actingAs($user)
+            ->tool(GetPlan::class)
+            ->assertOk()
+            ->assertDontSee('October NAC');
+    }
 }

@@ -34,6 +34,7 @@ class NotifyNewEvents extends Command
         }
 
         $sent = 0;
+        $failed = 0;
         foreach (User::whereHas('fencers')->with('fencers.homeClub')->get() as $user) {
             $groups = [];
             foreach ($user->fencers as $fencer) {
@@ -52,18 +53,33 @@ class NotifyNewEvents extends Command
             $names = collect($groups)->flatMap(fn ($g) => array_column($g['rows'], 'tournament'))->pluck('name')->unique();
             if ($dry) {
                 $this->line("  would email {$user->email}: ".$names->implode(' · '));
-            } else {
-                $user->notify(new NewEventsDigest($groups));
+                $sent++;
+
+                continue;
             }
-            $sent++;
+
+            // One bad recipient must not abort the run and re-spam everyone
+            // already emailed when the next run re-finds the same events.
+            try {
+                $user->notify(new NewEventsDigest($groups));
+                $sent++;
+            } catch (\Throwable $e) {
+                $failed++;
+                $this->warn("  ! digest to {$user->email} failed: {$e->getMessage()}");
+                logger()->error('New-events digest failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            }
         }
 
-        if (! $dry) {
+        // Mark the events considered so they never re-alert — unless every
+        // send failed (a likely mail outage), in which case leave them for the
+        // next run rather than silently burying them.
+        if (! $dry && ! ($sent === 0 && $failed > 0)) {
             Tournament::whereIn('id', $new->pluck('id'))->update(['alerted_at' => now()]);
         }
 
-        $this->info(sprintf('%s: %d new event(s), %d digest(s) %s.',
-            $dry ? 'Dry run' : 'Done', $new->count(), $sent, $dry ? 'would be sent' : 'sent'));
+        $this->info(sprintf('%s: %d new event(s), %d digest(s) %s%s.',
+            $dry ? 'Dry run' : 'Done', $new->count(), $sent, $dry ? 'would be sent' : 'sent',
+            $failed ? ", {$failed} failed" : ''));
 
         return self::SUCCESS;
     }

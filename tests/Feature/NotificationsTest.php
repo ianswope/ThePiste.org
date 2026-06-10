@@ -8,7 +8,9 @@ use App\Models\Tournament;
 use App\Models\User;
 use App\Notifications\NewEventsDigest;
 use App\Notifications\RegistrationReminderDigest;
+use Illuminate\Contracts\Notifications\Dispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -166,5 +168,54 @@ class NotificationsTest extends TestCase
         $this->artisan('thepiste:send-registration-reminders')->assertSuccessful();
 
         Notification::assertNothingSentTo($user);
+    }
+
+    /** Replace the notifications dispatcher so notify() throws for chosen emails. */
+    private function failNotificationsFor(array $emails): void
+    {
+        $mock = \Mockery::mock(Dispatcher::class);
+        $mock->shouldReceive('send')->andReturnUsing(function ($notifiable, $instance) use ($emails) {
+            if (in_array($notifiable->email, $emails, true)) {
+                throw new \RuntimeException('mail down');
+            }
+        });
+        $mock->shouldReceive('sendNow')->andReturnNull();
+        $this->app->instance(ChannelManager::class, $mock);
+        $this->app->instance(Dispatcher::class, $mock);
+    }
+
+    public function test_new_event_alert_survives_a_send_failure_and_does_not_mark(): void
+    {
+        $user = $this->makeUser();
+        $event = $this->makeTournament();
+        $this->failNotificationsFor([$user->email]);
+
+        // The failing send must not abort the command...
+        $this->artisan('thepiste:notify-new-events')->assertSuccessful();
+
+        // ...and with every send failed the event stays unalerted, so the next
+        // run retries instead of silently burying it.
+        $this->assertNull($event->fresh()->alerted_at);
+    }
+
+    public function test_registration_reminder_failure_retries_only_the_failed_user(): void
+    {
+        $soon = $this->makeTournament(['name' => 'Next Week RJCC', 'starts_on' => now()->addDays(8)]);
+
+        $failUser = $this->makeUser();
+        $okUser = $this->makeUser();
+        $failItem = SeasonPlan::create(['fencer_id' => $failUser->fencers()->first()->id, 'season_id' => $this->season->id])
+            ->items()->create(['tournament_id' => $soon->id]);
+        $okItem = SeasonPlan::create(['fencer_id' => $okUser->fencers()->first()->id, 'season_id' => $this->season->id])
+            ->items()->create(['tournament_id' => $soon->id]);
+
+        $this->failNotificationsFor([$failUser->email]);
+
+        $this->artisan('thepiste:send-registration-reminders')->assertSuccessful();
+
+        // The failed user's item is left unmarked (retried next run); the
+        // successful user's item is marked so it is not nudged again.
+        $this->assertNull($failItem->fresh()->reminded_at);
+        $this->assertNotNull($okItem->fresh()->reminded_at);
     }
 }

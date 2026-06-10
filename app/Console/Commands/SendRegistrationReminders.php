@@ -33,6 +33,8 @@ class SendRegistrationReminders extends Command
         }
 
         $sent = 0;
+        $failed = 0;
+        $remindedIds = [];
         foreach ($due->groupBy(fn (PlanItem $i) => $i->plan->fencer->user_id) as $items) {
             $user = $items->first()->plan->fencer->user;
 
@@ -48,18 +50,32 @@ class SendRegistrationReminders extends Command
             if ($dry) {
                 $names = $items->map(fn (PlanItem $i) => $i->tournament->name)->implode(' · ');
                 $this->line("  would email {$user->email}: {$names}");
-            } else {
-                $user->notify(new RegistrationReminderDigest($groups));
+                $sent++;
+
+                continue;
             }
-            $sent++;
+
+            // Mark reminded per successfully-sent user, so a failed send leaves
+            // that user's items to be retried on the next run instead of being
+            // silently marked done.
+            try {
+                $user->notify(new RegistrationReminderDigest($groups));
+                $remindedIds = array_merge($remindedIds, $items->pluck('id')->all());
+                $sent++;
+            } catch (\Throwable $e) {
+                $failed++;
+                $this->warn("  ! reminder to {$user->email} failed: {$e->getMessage()}");
+                logger()->error('Registration reminder failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            }
         }
 
-        if (! $dry) {
-            PlanItem::whereIn('id', $due->pluck('id'))->update(['reminded_at' => now()]);
+        if (! $dry && $remindedIds !== []) {
+            PlanItem::whereIn('id', $remindedIds)->update(['reminded_at' => now()]);
         }
 
-        $this->info(sprintf('%s: %d plan item(s) due, %d digest(s) %s.',
-            $dry ? 'Dry run' : 'Done', $due->count(), $sent, $dry ? 'would be sent' : 'sent'));
+        $this->info(sprintf('%s: %d plan item(s) due, %d digest(s) %s%s.',
+            $dry ? 'Dry run' : 'Done', $due->count(), $sent, $dry ? 'would be sent' : 'sent',
+            $failed ? ", {$failed} failed" : ''));
 
         return self::SUCCESS;
     }

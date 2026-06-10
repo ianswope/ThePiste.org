@@ -67,7 +67,10 @@ class PlanShareController extends Controller
             ->with(['fencer.homeClub', 'season'])
             ->firstOrFail();
 
-        $items = $plan->items()->with('expenses')->get()->keyBy('tournament_id');
+        // Skipped events drop out of the shared plan entirely — both the
+        // schedule and the cost tally — the same rule the budget page uses.
+        $plan->setRelation('items', $plan->items()->with('expenses')->get());
+        $items = $plan->countedItems()->keyBy('tournament_id');
 
         $rows = $tiers->evaluate($plan->fencer, $plan->season->tournaments()->with('hostClub')->get())
             ->filter(fn ($r) => $items->has($r['tournament']->id))

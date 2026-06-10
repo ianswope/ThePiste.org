@@ -98,6 +98,20 @@ class PlanShareTest extends TestCase
         $this->get("/p/{$plan->share_slug}")->assertSee('1,450');
     }
 
+    public function test_skipped_events_are_excluded_from_the_shared_plan(): void
+    {
+        [, $fencer, $plan] = $this->makeUserWithPlan();
+
+        $nac = Tournament::where('name', 'October NAC')->firstOrFail();
+        $plan->items()->where('tournament_id', $nac->id)->update(['status' => 'skipped', 'est_cost' => 2000]);
+
+        auth()->logout();
+        $this->get("/p/{$plan->share_slug}")
+            ->assertOk()
+            ->assertDontSee('October NAC')   // skipped: off the shared schedule
+            ->assertDontSee('2,000');        // and out of the cost tally
+    }
+
     public function test_builder_flags_clashes_when_both_sides_are_planned(): void
     {
         [$user] = $this->makeUserWithPlan();

@@ -27,7 +27,9 @@ class GetPlan extends Tool
         $fencer = $this->fencer($request);
         $season = $this->activeSeason();
         $plan = $this->plan($fencer);
-        $items = $plan->items()->with('expenses')->get()->keyBy('tournament_id');
+        // Skipped events drop out of the plan the MCP reports, matching the app.
+        $plan->setRelation('items', $plan->items()->with('expenses')->get());
+        $items = $plan->countedItems()->keyBy('tournament_id');
 
         $rows = $tiers->evaluate($fencer, $season->tournaments()->with('hostClub')->get())
             ->filter(fn ($r) => $items->has($r['tournament']->id))
@@ -42,7 +44,7 @@ class GetPlan extends Tool
                 'nacs' => $rows->where('is_nac', true)->count(),
                 'drives' => $rows->filter(fn ($r) => $r['driveable'])->count(),
                 'flights' => $rows->filter(fn ($r) => ! $r['driveable'] && $r['distance'] !== null)->count(),
-                'est_cost' => round($items->sum(fn ($i) => $i->effectiveTotal())),
+                'est_cost' => round($plan->projectedTotal()),
                 'budget' => $plan->budget,
             ],
             'events' => $rows->map(fn ($r) => [

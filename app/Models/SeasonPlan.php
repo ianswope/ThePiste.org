@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class SeasonPlan extends Model
 {
@@ -28,12 +29,32 @@ class SeasonPlan extends Model
     }
 
     /**
-     * Spreadsheet-style season rollup. Expects items.expenses to be loaded.
-     * Skipped items stay on the schedule but drop out of every money number.
+     * The plan items that count toward money totals. Skipped events stay on
+     * the schedule but drop out of every cost number, so this is the one place
+     * that rule lives — every total (budget page, builder tile, share page,
+     * MCP) sums over this set. Self-loads items.expenses so callers don't have
+     * to remember the eager-load.
+     */
+    public function countedItems(): Collection
+    {
+        $this->loadMissing('items.expenses');
+
+        return $this->items->where('status', '!=', 'skipped');
+    }
+
+    /** Best-known season total: per-item actuals over estimates, skipped excluded. */
+    public function projectedTotal(): float
+    {
+        return round($this->countedItems()->sum(fn (PlanItem $i) => $i->effectiveTotal()), 2);
+    }
+
+    /**
+     * Spreadsheet-style season rollup. Skipped items stay on the schedule but
+     * drop out of every money number (see countedItems()).
      */
     public function costSummary(): array
     {
-        $counted = $this->items->where('status', '!=', 'skipped');
+        $counted = $this->countedItems();
         $projected = round($counted->sum(fn (PlanItem $i) => $i->effectiveTotal()), 2);
         $paid = round($counted->where('paid', 'yes')->sum(fn (PlanItem $i) => $i->effectiveTotal()), 2);
         $withCosts = $counted->filter(fn (PlanItem $i) => $i->effectiveTotal() > 0);
