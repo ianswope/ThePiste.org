@@ -83,6 +83,21 @@ class PrepTrackerTest extends TestCase
         $this->assertSame('planned', $item->status); // status isn't a settable field here
     }
 
+    public function test_set_note_saves_and_clears_the_personal_note(): void
+    {
+        [$user, $item] = $this->makeUserWithPlannedEvent();
+        $this->actingAs($user);
+
+        $component = Livewire::test(PrepTracker::class)
+            ->call('setNote', $item->id, '  Carpool with the Lees.  ');
+        // Trimmed on save.
+        $this->assertSame('Carpool with the Lees.', $item->fresh()->notes);
+
+        // Blanking it back out clears to null rather than an empty string.
+        $component->call('setNote', $item->id, '   ');
+        $this->assertNull($item->fresh()->notes);
+    }
+
     public function test_progress_counts_completed_milestones(): void
     {
         [, $item] = $this->makeUserWithPlannedEvent();

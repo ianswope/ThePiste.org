@@ -6,6 +6,7 @@ use App\Livewire\Concerns\ResolvesActiveFencer;
 use App\Models\PlanItem;
 use App\Models\SeasonPlan;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -72,6 +73,16 @@ class PrepTracker extends Component
         }
 
         $this->plan->items()->whereKey($id)->update([$field => $value]);
+        unset($this->items);
+    }
+
+    /** Free-text personal note for an event (private to this fencer). */
+    public function setNote(int $id, string $note): void
+    {
+        $note = trim($note);
+        $this->plan->items()->whereKey($id)->update([
+            'notes' => $note === '' ? null : Str::limit($note, 2000, ''),
+        ]);
         unset($this->items);
     }
 

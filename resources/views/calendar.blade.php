@@ -170,6 +170,9 @@
                                     <span class="cconflict">⚠ Clashes with {{ $r['conflict_with'] }}, which ranks higher this weekend.</span>
                                 @endif
                             </div>
+                            @if ($inPlan && ($mynote = $planNotes[$t->id] ?? null))
+                                <div class="cmynote"><span class="cmynote-tag">Your note</span>{{ $mynote }}</div>
+                            @endif
                         </div>
                     </article>
                 @endforeach

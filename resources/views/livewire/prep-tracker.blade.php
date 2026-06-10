@@ -65,6 +65,13 @@
                 </div>
             </div>
 
+            <div class="prep-note">
+                <label for="note-{{ $item->id }}">Notes</label>
+                <textarea id="note-{{ $item->id }}" class="input" rows="2"
+                    placeholder="Anything to remember for this event — carpool, hotel, who's going, what to ask the coach."
+                    wire:change="setNote({{ $item->id }}, $event.target.value)">{{ $item->notes }}</textarea>
+            </div>
+
             <div class="prep-foot">
                 <span class="prep-cal-label">Add to calendar</span>
                 <a class="btn btn-ghost btn-sm" href="{{ $t->googleCalendarUrl() }}" target="_blank" rel="noopener">Google</a>

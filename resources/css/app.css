@@ -230,6 +230,8 @@ a { color: inherit; }
 
 .cnote { font-size: 13.5px; color: var(--ink-soft); line-height: 1.6; background: var(--surface-2); border-radius: 9px; padding: 10px 13px; margin-top: auto; }
 .cconflict { display: block; margin-top: 7px; padding-top: 7px; border-top: 1px dashed var(--border); color: var(--red-ink); font-weight: 700; font-size: 12.5px; }
+.cmynote { font-size: 13px; color: var(--ink-soft); line-height: 1.55; background: var(--surface-2); border-left: 3px solid var(--red-ink); border-radius: 7px; padding: 8px 12px; margin-top: 8px; white-space: pre-line; }
+.cmynote-tag { display: block; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 3px; }
 
 /* ── filter hide ─────────────────────────────────────────────────────── */
 .card.hidden { display: none; }
@@ -496,6 +498,9 @@ a { color: inherit; }
 .prep-toggle:hover:not(:disabled) { border-color: var(--green-ink); }
 .prep-toggle.on { background: rgba(45,185,94,.13); border-color: var(--green-ink); color: var(--green-ink); }
 .prep-toggle:disabled { cursor: default; }
+.prep-note { display: flex; flex-direction: column; gap: 5px; margin-top: 16px; }
+.prep-note label { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.prep-note textarea { width: 100%; resize: vertical; min-height: 46px; font-size: 13px; line-height: 1.5; }
 .prep-foot { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--border); }
 .prep-cal-label { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-right: 2px; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
