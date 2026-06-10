@@ -141,4 +141,11 @@
             <p class="help">No results yet. After the first tournament, log how it went here.</p>
         @endforelse
     </div>
+
+    <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+        <a class="btn btn-ghost" href="{{ route('calendar') }}">Calendar</a>
+        <a class="btn btn-ghost" href="{{ route('season.build') }}">Season builder</a>
+        <a class="btn btn-ghost" href="{{ route('season.prep') }}">Prep</a>
+        <a class="btn btn-ghost" href="{{ route('season.budget') }}">Budget</a>
+    </div>
 </div>

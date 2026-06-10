@@ -63,6 +63,32 @@ class PlanShareTest extends TestCase
         $this->get('/p/not-a-real-slug')->assertNotFound();
     }
 
+    public function test_single_event_ics_download(): void
+    {
+        $nac = Tournament::where('name', 'October NAC')->firstOrFail();
+
+        $ics = $this->get("/events/{$nac->id}.ics")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'text/calendar; charset=utf-8')
+            ->getContent();
+
+        $this->assertStringContainsString('BEGIN:VEVENT', $ics);
+        $this->assertStringContainsString('SUMMARY:October NAC', $ics);
+        $this->assertStringContainsString("UID:event-{$nac->id}@thepiste.org", $ics);
+        // All-day DTEND is exclusive (day after ends_on).
+        $this->assertStringContainsString('DTEND;VALUE=DATE:'.$nac->ends_on->copy()->addDay()->format('Ymd'), $ics);
+    }
+
+    public function test_google_calendar_url_is_prefilled(): void
+    {
+        $nac = Tournament::where('name', 'October NAC')->firstOrFail();
+        $url = $nac->googleCalendarUrl();
+
+        $this->assertStringContainsString('calendar.google.com/calendar/render?action=TEMPLATE', $url);
+        $this->assertStringContainsString('text=October%20NAC', $url);
+        $this->assertStringContainsString('dates='.$nac->starts_on->format('Ymd').'/'.$nac->ends_on->copy()->addDay()->format('Ymd'), $url);
+    }
+
     public function test_ics_feed_has_one_vevent_per_plan_item_with_exclusive_end(): void
     {
         [, , $plan] = $this->makeUserWithPlan();

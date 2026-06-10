@@ -110,6 +110,7 @@
     <div style="display:flex; gap:10px; margin-top:20px;">
         <a class="btn btn-ghost" href="{{ route('calendar') }}">Calendar</a>
         <a class="btn btn-ghost" href="{{ route('season.build') }}">Season builder</a>
+        <a class="btn btn-ghost" href="{{ route('season.prep') }}">Prep</a>
         <a class="btn btn-ghost" href="{{ route('season.results') }}">Results</a>
     </div>
 </div>

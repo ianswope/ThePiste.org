@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SeasonPlan;
 use App\Services\TierService;
+use App\Support\Ics;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -29,32 +30,16 @@ class PlanShareController extends Controller
     {
         [$plan, $rows] = $this->resolve($slug, $tiers);
 
-        $lines = [
-            'BEGIN:VCALENDAR',
-            'VERSION:2.0',
-            'PRODID:-//ThePiste//thepiste.org//EN',
-            'CALSCALE:GREGORIAN',
-            'X-WR-CALNAME:'.$this->esc("{$plan->fencer->name} fencing {$plan->season->name}"),
-        ];
-
-        foreach ($rows as $r) {
+        $vevents = $rows->map(function ($r) use ($plan) {
             $t = $r['tournament'];
-            $lines = [...$lines,
-                'BEGIN:VEVENT',
-                "UID:plan-{$plan->id}-{$t->id}@thepiste.org",
-                'DTSTAMP:'.$plan->updated_at->utc()->format('Ymd\THis\Z'),
-                'DTSTART;VALUE=DATE:'.$t->starts_on->format('Ymd'),
-                // iCal all-day DTEND is exclusive.
-                'DTEND;VALUE=DATE:'.$t->ends_on->copy()->addDay()->format('Ymd'),
-                'SUMMARY:'.$this->esc($t->name),
-                'LOCATION:'.$this->esc($t->location()),
-                'DESCRIPTION:'.$this->esc(strtoupper($r['tier']).($r['distance'] ? ' · '.round($r['distance']).' mi '.($r['driveable'] ? 'drive' : 'fly') : '').' · via thepiste.org'),
-                'END:VEVENT',
-            ];
-        }
-        $lines[] = 'END:VCALENDAR';
+            $desc = strtoupper($r['tier']).($r['distance'] ? ' · '.round($r['distance']).' mi '.($r['driveable'] ? 'drive' : 'fly') : '').' · via thepiste.org';
 
-        return response(implode("\r\n", $lines)."\r\n", 200, [
+            return Ics::event("plan-{$plan->id}-{$t->id}@thepiste.org", $t->starts_on, $t->ends_on, $t->name, $t->location(), $desc, $plan->updated_at);
+        })->all();
+
+        $body = Ics::calendar("{$plan->fencer->name} fencing {$plan->season->name}", $vevents);
+
+        return response($body, 200, [
             'Content-Type' => 'text/calendar; charset=utf-8',
             'Content-Disposition' => 'attachment; filename="thepiste-plan.ics"',
         ]);
@@ -93,14 +78,5 @@ class PlanShareController extends Controller
             'flights' => $rows->filter(fn ($r) => ! $r['driveable'] && $r['distance'] !== null)->count(),
             'est_cost' => round($rows->sum(fn ($r) => $r['est_cost'] ?? 0)),
         ];
-    }
-
-    private function esc(string $v): string
-    {
-        return str_replace([
-            '\\', ';', ',', "\n",
-        ], [
-            '\\\\', '\;', '\,', '\n',
-        ], $v);
     }
 }

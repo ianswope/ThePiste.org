@@ -45,6 +45,7 @@
                         </form>
                     @endif
                     <a class="bnav go" href="{{ route('season.build') }}">Build plan</a>
+                    <a class="bnav" href="{{ route('season.prep') }}">Prep</a>
                     <a class="bnav" href="{{ route('season.results') }}">Results</a>
                     <a class="bnav" href="{{ route('season.budget') }}">Budget</a>
                     <a class="bnav" href="{{ route('fencers.edit', $fencer) }}">Edit profile</a>

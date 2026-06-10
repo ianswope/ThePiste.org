@@ -478,6 +478,28 @@ a { color: inherit; }
 .input.paid-yes { border-color: var(--green-ink); color: var(--green-ink); font-weight: 600; }
 .input.paid-partial { border-color: var(--amber-ink); color: var(--amber-ink); font-weight: 600; }
 
+/* ── event prep tracker ──────────────────────────────────────────────── */
+.prepcard { margin-bottom: 16px; }
+.prep-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.prep-date { font-size: 11.5px; color: var(--muted); }
+.prep-name { font-weight: 700; font-size: 16px; color: var(--ink); margin-top: 2px; }
+.prep-done-tag { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--green-ink); background: rgba(45,185,94,.13); border-radius: 5px; padding: 2px 6px; margin-left: 8px; vertical-align: middle; }
+.prep-ready { min-width: 150px; text-align: right; }
+.prep-ready .mono { font-family: 'Martian Mono', monospace; font-size: 12px; color: var(--ink-soft); }
+.prep-ready .progressbar { margin-top: 5px; }
+.prep-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 16px; }
+@media (max-width: 720px) { .prep-grid { grid-template-columns: repeat(2, 1fr); } }
+.prep-cell { display: flex; flex-direction: column; gap: 5px; }
+.prep-cell label { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.prep-cell .input.compact { width: 100%; font-size: 13px; padding: 8px 9px; }
+.prep-toggle { font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--muted); cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.prep-toggle:hover:not(:disabled) { border-color: var(--green-ink); }
+.prep-toggle.on { background: rgba(45,185,94,.13); border-color: var(--green-ink); color: var(--green-ink); }
+.prep-toggle:disabled { cursor: default; }
+.prep-foot { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--border); }
+.prep-cal-label { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-right: 2px; }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+
 /* ── responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 520px) {
     .datebox .days { font-size: 24px; }

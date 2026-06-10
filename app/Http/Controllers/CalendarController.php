@@ -4,13 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Models\Fencer;
 use App\Models\Season;
+use App\Models\Tournament;
 use App\Services\TierService;
+use App\Support\Ics;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CalendarController extends Controller
 {
+    /** Single-event .ics download (catalog is public facts — no auth needed). */
+    public function ics(Tournament $tournament): Response
+    {
+        $event = Ics::event(
+            "event-{$tournament->id}@thepiste.org",
+            $tournament->starts_on,
+            $tournament->ends_on,
+            $tournament->name,
+            $tournament->location(),
+            'via thepiste.org',
+            $tournament->updated_at ?? $tournament->starts_on,
+        );
+
+        return response(Ics::calendar($tournament->name, [$event]), 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="'.Str::slug($tournament->name).'.ics"',
+        ]);
+    }
+
     /** Signed-in fencer's personalized season (route is auth-guarded). */
     public function index(TierService $tiers): View|RedirectResponse
     {

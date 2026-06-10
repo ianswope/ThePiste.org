@@ -52,6 +52,18 @@ class Tournament extends Model
         return collect([$this->city, $region])->filter()->implode(', ');
     }
 
+    /** "Add to Google Calendar" link, prefilled. All-day, end-exclusive like iCal. */
+    public function googleCalendarUrl(): string
+    {
+        $dates = $this->starts_on->format('Ymd').'/'.$this->ends_on->copy()->addDay()->format('Ymd');
+
+        return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+            .'&text='.rawurlencode($this->name)
+            .'&dates='.$dates
+            .'&location='.rawurlencode($this->location())
+            .'&details='.rawurlencode('via thepiste.org');
+    }
+
     /** National-level event (NAC, JO, Championship): long registration lead. */
     public function isNational(): bool
     {
