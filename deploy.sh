@@ -29,5 +29,8 @@ php artisan view:cache
 echo ">> permissions + reload"
 chown -R www-data:www-data storage bootstrap/cache
 systemctl reload php8.4-fpm
+# Gracefully reload the queue worker so it runs the new code instead of a
+# stale in-memory copy (supervisor restarts it). No-op if none is running.
+php artisan queue:restart
 
 echo "Deployed thepiste.org @ $(git rev-parse --short HEAD)"
