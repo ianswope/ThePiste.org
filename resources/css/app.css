@@ -457,6 +457,25 @@ a { color: inherit; }
 .rmain { min-width: 0; }
 @media (max-width: 520px) { .rrow { grid-template-columns: 52px 1fr; } .rrow .btoggle { grid-column: 1 / -1; } }
 
+/* ── budget tracker ──────────────────────────────────────────────────── */
+.layer-toggle { display: inline-flex; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden; }
+.layer-toggle button { font-family: inherit; font-size: 12.5px; font-weight: 700; letter-spacing: .04em; padding: 8px 16px; background: transparent; color: var(--muted); border: none; cursor: pointer; }
+.layer-toggle button.on { background: var(--night-2); color: #fff; }
+.cat-totals { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-family: 'Martian Mono', monospace; font-size: 12.5px; color: var(--ink-soft); }
+.cat-totals em { font-style: normal; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-right: 5px; }
+.builder.wide { max-width: 1240px; }
+.budget-table { width: 100%; border-collapse: collapse; min-width: 980px; }
+.budget-table th { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; text-align: right; padding: 6px; }
+.budget-table td { padding: 7px 5px; border-top: 1px solid var(--border); vertical-align: middle; text-align: right; }
+.budget-table .bt-name { font-weight: 600; font-size: 13.5px; color: var(--ink); }
+.budget-table .bt-meta { font-size: 11.5px; color: var(--muted); margin-top: 1px; white-space: nowrap; }
+.budget-table .bt-total { font-family: 'Martian Mono', monospace; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.budget-table .input { font-family: 'Martian Mono', monospace; font-size: 12.5px; padding: 7px 8px; text-align: right; width: 86px; }
+.budget-table .input.compact { width: auto; font-family: inherit; text-align: left; font-size: 12.5px; padding: 7px 8px; }
+.budget-table tr.skipped .bt-name, .budget-table tr.skipped .bt-total { color: var(--faint); text-decoration: line-through; }
+.input.paid-yes { border-color: var(--green-ink); color: var(--green-ink); font-weight: 600; }
+.input.paid-partial { border-color: var(--amber-ink); color: var(--amber-ink); font-weight: 600; }
+
 /* ── responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 520px) {
     .datebox .days { font-size: 24px; }

@@ -169,7 +169,7 @@ class SeasonBuilder extends Component
                 'nacs' => $chosen->where('is_nac', true)->count(),
                 'drives' => $chosen->filter(fn ($r) => $r['driveable'])->count(),
                 'flights' => $chosen->filter(fn ($r) => ! $r['driveable'] && $r['distance'] !== null)->count(),
-                'est_cost' => round($chosen->sum(fn ($r) => $this->costs[$r['tournament']->id] ?? 0)),
+                'est_cost' => round($this->plan->items()->with('expenses')->get()->sum(fn ($i) => $i->effectiveTotal())),
             ],
             'selectedIds' => $sel,
             'clashIds' => $clashes,

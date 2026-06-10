@@ -32,6 +32,15 @@ return [
         'default' => 14,
     ],
 
+    // Trip cost buckets on the budget tracker (key => column label).
+    'expense_categories' => [
+        'fees' => 'Fees',
+        'coaching' => 'Coaching',
+        'hotel' => 'Hotel',
+        'travel' => 'Travel',
+        'food' => 'Food',
+    ],
+
     // Tier priority for conflict resolution (higher wins the weekend).
     'tier_rank' => [
         'nac' => 6,

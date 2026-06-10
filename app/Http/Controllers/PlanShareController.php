@@ -67,12 +67,12 @@ class PlanShareController extends Controller
             ->with(['fencer.homeClub', 'season'])
             ->firstOrFail();
 
-        $ids = $plan->items()->pluck('est_cost', 'tournament_id');
+        $items = $plan->items()->with('expenses')->get()->keyBy('tournament_id');
 
         $rows = $tiers->evaluate($plan->fencer, $plan->season->tournaments()->with('hostClub')->get())
-            ->filter(fn ($r) => $ids->has($r['tournament']->id))
-            ->map(function ($r) use ($ids) {
-                $r['est_cost'] = $ids->get($r['tournament']->id);
+            ->filter(fn ($r) => $items->has($r['tournament']->id))
+            ->map(function ($r) use ($items) {
+                $r['est_cost'] = $items[$r['tournament']->id]->effectiveTotal() ?: null;
 
                 return $r;
             })

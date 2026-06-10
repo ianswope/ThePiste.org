@@ -135,6 +135,7 @@
             <a class="btn btn-ghost" href="{{ route('plan.share', $plan->share_slug) }}" target="_blank">Share / export</a>
             <a class="btn btn-ghost" href="{{ route('calendar') }}">Calendar</a>
             <a class="btn btn-ghost" href="{{ route('season.results') }}">Results</a>
+            <a class="btn btn-ghost" href="{{ route('season.budget') }}">Budget</a>
             <span class="saved">Saved automatically</span>
         </div>
     </div>
