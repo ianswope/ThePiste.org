@@ -71,6 +71,52 @@ class SeasonBuilderTest extends TestCase
         $this->assertFalse($plan->items()->where('tournament_id', $airForce->id)->exists());
     }
 
+    public function test_removing_an_itemized_event_preserves_its_costs(): void
+    {
+        $user = $this->makeFencer();
+        $this->actingAs($user);
+
+        $airForce = Tournament::where('name', 'like', 'Air Force%')->firstOrFail();
+        $component = Livewire::test(SeasonBuilder::class)->call('toggle', $airForce->id);
+
+        $plan = $user->fencers()->first()->seasonPlans()->first();
+        $item = $plan->items()->where('tournament_id', $airForce->id)->firstOrFail();
+        $item->expenses()->create(['category' => 'fees', 'est_amount' => 250]);
+        $item->update(['paid' => 'partial']);
+
+        // Un-ticking must not destroy recorded money: the row survives as skipped.
+        $component->call('toggle', $airForce->id);
+        $item->refresh();
+        $this->assertSame('skipped', $item->status);
+        $this->assertSame(1, $item->expenses()->count());
+
+        // Re-ticking restores it to the active plan with its costs intact.
+        $component->call('toggle', $airForce->id);
+        $item->refresh();
+        $this->assertSame('planned', $item->status);
+        $this->assertSame(250.0, $item->load('expenses')->effectiveTotal());
+        // Still one item — no duplicate created.
+        $this->assertSame(1, $plan->items()->where('tournament_id', $airForce->id)->count());
+    }
+
+    public function test_removing_an_event_with_no_costs_deletes_it(): void
+    {
+        $user = $this->makeFencer();
+        $this->actingAs($user);
+
+        $airForce = Tournament::where('name', 'like', 'Air Force%')->firstOrFail();
+        $plan = $user->fencers()->first()->seasonPlans()->firstOrCreate([
+            'season_id' => Tournament::first()->season_id,
+        ]);
+
+        Livewire::test(SeasonBuilder::class)
+            ->call('toggle', $airForce->id)
+            ->call('toggle', $airForce->id);
+
+        // Nothing to preserve, so it's a clean delete (no skipped clutter).
+        $this->assertFalse($plan->items()->where('tournament_id', $airForce->id)->exists());
+    }
+
     public function test_inline_cost_is_ignored_once_event_is_itemized(): void
     {
         $user = $this->makeFencer();

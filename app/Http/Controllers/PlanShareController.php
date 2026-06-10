@@ -47,7 +47,7 @@ class PlanShareController extends Controller
                 // iCal all-day DTEND is exclusive.
                 'DTEND;VALUE=DATE:'.$t->ends_on->copy()->addDay()->format('Ymd'),
                 'SUMMARY:'.$this->esc($t->name),
-                'LOCATION:'.$this->esc(trim("{$t->city}, {$t->state}", ', ')),
+                'LOCATION:'.$this->esc($t->location()),
                 'DESCRIPTION:'.$this->esc(strtoupper($r['tier']).($r['distance'] ? ' · '.round($r['distance']).' mi '.($r['driveable'] ? 'drive' : 'fly') : '').' · via thepiste.org'),
                 'END:VEVENT',
             ];

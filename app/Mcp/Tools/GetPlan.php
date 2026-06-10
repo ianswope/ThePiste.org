@@ -51,7 +51,7 @@ class GetPlan extends Tool
                 'tournament_id' => $r['tournament']->id,
                 'dates' => $r['tournament']->starts_on->toDateString(),
                 'name' => $r['tournament']->name,
-                'location' => trim("{$r['tournament']->city}, {$r['tournament']->state}", ', '),
+                'location' => $r['tournament']->location(),
                 'tier' => $r['tier'],
                 'travel' => $r['distance'] === null ? null : ($r['driveable'] ? 'drive' : 'fly'),
                 'distance_miles' => $r['distance'] !== null ? round($r['distance']) : null,

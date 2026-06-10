@@ -59,14 +59,20 @@ class SeasonPlan extends Model
         $paid = round($counted->where('paid', 'yes')->sum(fn (PlanItem $i) => $i->effectiveTotal()), 2);
         $withCosts = $counted->filter(fn (PlanItem $i) => $i->effectiveTotal() > 0);
 
+        $byCategory = collect(array_keys(config('fencing.expense_categories')))
+            ->mapWithKeys(fn ($c) => [$c => round($counted->sum(fn (PlanItem $i) => $i->categoryAmount($c) ?? 0), 2)])
+            ->all();
+
         return [
             'projected' => $projected,
             'paid' => $paid,
             'to_pay' => round($projected - $paid, 2),
             'avg' => $withCosts->isEmpty() ? 0.0 : round($projected / $withCosts->count(), 2),
-            'by_category' => collect(array_keys(config('fencing.expense_categories')))
-                ->mapWithKeys(fn ($c) => [$c => round($counted->sum(fn (PlanItem $i) => $i->categoryAmount($c) ?? 0), 2)])
-                ->all(),
+            'by_category' => $byCategory,
+            // Ballpark estimates (est_cost, no itemized breakdown) count toward
+            // projected but no category — surface the remainder so the category
+            // chips and the Projected tile always reconcile.
+            'unitemized' => round($projected - array_sum($byCategory), 2),
             'done' => $this->items->where('status', 'attended')->count(),
             'total' => $this->items->count(),
             'budget' => $this->budget,

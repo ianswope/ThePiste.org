@@ -52,4 +52,24 @@ class PlanItem extends Model
 
         return round($this->expenses->sum(fn (Expense $e) => $e->effective()), 2);
     }
+
+    /** Real money has been entered, so removal shouldn't silently discard it. */
+    public function hasFinancialHistory(): bool
+    {
+        return $this->paid !== 'no' || $this->expenses()->exists();
+    }
+
+    /**
+     * Take this event out of the active plan. If costs or payments have been
+     * recorded, keep the row as skipped (off every total and off the schedule)
+     * so an accidental un-tick can't wipe real spending; otherwise drop it.
+     */
+    public function removeFromPlan(): void
+    {
+        if ($this->hasFinancialHistory()) {
+            $this->update(['status' => 'skipped']);
+        } else {
+            $this->delete();
+        }
+    }
 }

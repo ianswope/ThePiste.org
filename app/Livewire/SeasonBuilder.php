@@ -54,16 +54,21 @@ class SeasonBuilder extends Component
             $this->plan->update(['share_slug' => Str::random(24)]);
         }
         $this->goalWeapon = $this->fencer->weapon;
-        $this->selected = $this->plan->items()->pluck('tournament_id')->map(fn ($id) => (int) $id)->all();
+        // "In plan" means an active item — a skipped one is off the plan but kept
+        // on record (its costs survive), so it shows here as available to re-add.
+        $this->selected = $this->plan->items()->where('status', '!=', 'skipped')
+            ->pluck('tournament_id')->map(fn ($id) => (int) $id)->all();
         $this->costs = $this->plan->items()->pluck('est_cost', 'tournament_id')
             ->map(fn ($c) => $c !== null ? (float) $c : null)->all();
 
-        // First visit: seed the plan with the recommended anchors.
-        if (empty($this->selected)) {
+        // First visit (an empty plan): seed the recommended anchors. Keyed off
+        // item count, not $selected, so a plan where everything was skipped
+        // isn't treated as new and re-seeded.
+        if ($this->plan->items()->count() === 0) {
             $anchors = $this->rows->filter(fn ($r) => $r['non_negotiable'])
                 ->map(fn ($r) => $r['tournament']->id)->values()->all();
             foreach ($anchors as $id) {
-                $this->plan->items()->firstOrCreate(['tournament_id' => $id]);
+                $this->plan->items()->create(['tournament_id' => $id]);
             }
             $this->selected = $anchors;
         }
@@ -80,11 +85,16 @@ class SeasonBuilder extends Component
 
     public function toggle(int $tournamentId): void
     {
+        $item = $this->plan->items()->where('tournament_id', $tournamentId)->first();
+
         if (in_array($tournamentId, $this->selected, true)) {
-            $this->plan->items()->where('tournament_id', $tournamentId)->delete();
+            // Removing: keep the record (skipped) when money's been entered.
+            $item?->removeFromPlan();
             $this->selected = array_values(array_diff($this->selected, [$tournamentId]));
         } else {
-            $this->plan->items()->firstOrCreate(['tournament_id' => $tournamentId]);
+            // Adding: re-activate a previously-skipped item (restoring its costs)
+            // rather than orphaning it and starting a duplicate from scratch.
+            $item ? $item->update(['status' => 'planned']) : $this->plan->items()->create(['tournament_id' => $tournamentId]);
             $this->selected[] = $tournamentId;
         }
     }
@@ -144,7 +154,9 @@ class SeasonBuilder extends Component
             return;
         }
 
-        $cost = is_numeric($value) ? max(0, (float) $value) : null;
+        $cost = is_numeric($value)
+            ? min((float) config('fencing.max_money'), max(0, round((float) $value, 2)))
+            : null;
         $item->update(['est_cost' => $cost]);
         $this->costs[$id] = $cost;
     }

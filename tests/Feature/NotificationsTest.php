@@ -170,6 +170,40 @@ class NotificationsTest extends TestCase
         Notification::assertNothingSentTo($user);
     }
 
+    public function test_digest_subject_counts_distinct_tournaments_not_per_fencer_rows(): void
+    {
+        $user = $this->makeUser();
+        // A second fencer on the same account, eligible for the same events.
+        $sib = $user->fencers()->create([
+            'name' => 'Sib', 'weapon' => 'foil', 'age_group' => 'Cadet',
+            'rating' => 'D', 'drive_radius_miles' => 450,
+            'home_lat' => 41.808, 'home_lng' => -88.011, 'home_state' => 'IL',
+        ]);
+        $sib->weapons()->create(['weapon' => 'foil', 'rating' => 'D', 'is_primary' => true]);
+
+        $this->makeTournament(); // one new event, relevant to both fencers
+
+        $this->artisan('thepiste:notify-new-events')->assertSuccessful();
+
+        Notification::assertSentTo($user, NewEventsDigest::class, function (NewEventsDigest $n) use ($user) {
+            // Two fencer groups, but one tournament — the subject must say "a", not "2".
+            return count($n->groups) === 2
+                && str_contains($n->toMail($user)->subject, 'A new tournament');
+        });
+    }
+
+    public function test_location_has_no_dangling_comma_without_a_state(): void
+    {
+        $intl = $this->makeTournament([
+            'name' => 'Paris World Cup', 'city' => 'Paris',
+            'state' => null, 'country' => 'FR', 'region' => 'INTL',
+        ]);
+        $domestic = $this->makeTournament(['name' => 'Chicago RJCC', 'city' => 'Chicago']);
+
+        $this->assertSame('Paris, FR', $intl->location());
+        $this->assertSame('Chicago, IL', $domestic->location());
+    }
+
     /** Replace the notifications dispatcher so notify() throws for chosen emails. */
     private function failNotificationsFor(array $emails): void
     {

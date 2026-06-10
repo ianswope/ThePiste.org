@@ -24,7 +24,12 @@ class NewEventsDigest extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $count = collect($this->groups)->sum(fn ($g) => count($g['rows']));
+        // Count distinct tournaments, not per-fencer rows: a household with two
+        // eligible fencers shouldn't read "4 new tournaments" for the same two.
+        $count = collect($this->groups)
+            ->flatMap(fn ($g) => array_column($g['rows'], 'tournament'))
+            ->unique(fn ($t) => $t->id)
+            ->count();
 
         $mail = (new MailMessage)
             ->subject($count === 1
@@ -37,8 +42,7 @@ class NewEventsDigest extends Notification
             $mail->line("**{$group['fencer']->name}**");
             foreach ($group['rows'] as $row) {
                 $t = $row['tournament'];
-                $where = $t->state ? "{$t->city}, {$t->state}" : $t->city;
-                $mail->line("- **{$t->name}** · {$t->starts_on->format('D M j')} · {$where} — {$row['note']}");
+                $mail->line("- **{$t->name}** · {$t->starts_on->format('D M j')} · {$t->location()} — {$row['note']}");
             }
         }
 

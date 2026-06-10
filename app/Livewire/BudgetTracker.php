@@ -86,8 +86,15 @@ class BudgetTracker extends Component
 
     public function updatedBudget($value): void
     {
-        $budget = is_numeric($value) ? max(0, round((float) $value, 2)) : null;
+        $budget = is_numeric($value) ? $this->clampMoney($value) : null;
+        $this->budget = $budget !== null ? (string) $budget : null;
         $this->plan->update(['budget' => $budget]);
+    }
+
+    /** Keep money within the decimal(8,2) column range so a typo can't 500. */
+    private function clampMoney($value): float
+    {
+        return min((float) config('fencing.max_money'), max(0, round((float) $value, 2)));
     }
 
     public function updatedAmounts($value, $key): void
@@ -98,7 +105,7 @@ class BudgetTracker extends Component
             return;
         }
 
-        $amount = is_numeric($value) ? max(0, round((float) $value, 2)) : null;
+        $amount = is_numeric($value) ? $this->clampMoney($value) : null;
         $column = $this->layer === 'est' ? 'est_amount' : 'actual_amount';
 
         $expense = $item->expenses()->firstOrNew(['category' => $category]);

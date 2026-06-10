@@ -11,7 +11,7 @@
                 <span style="font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:700;">Season budget</span>
                 <span style="position:relative; display:inline-block;">
                     <span style="position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); font-family:'Martian Mono',monospace; font-size:13.5px;">$</span>
-                    <input class="input money" style="width:130px; padding-left:24px;" type="number" min="0" step="100"
+                    <input class="input money" style="width:130px; padding-left:24px;" type="number" min="0" max="999999.99" step="100"
                            wire:model.blur="budget" placeholder="12000">
                 </span>
             </label>
@@ -41,6 +41,9 @@
             @foreach ($categories as $key => $label)
                 <span><em>{{ $label }}</em> ${{ number_format($summary['by_category'][$key]) }}</span>
             @endforeach
+            @if ($summary['unitemized'] > 0)
+                <span><em>Ballpark</em> ${{ number_format($summary['unitemized']) }}</span>
+            @endif
         </div>
     </div>
 
@@ -70,12 +73,12 @@
                         <tr wire:key="budget-item-{{ $item->id }}" class="{{ $item->status === 'skipped' ? 'skipped' : '' }}">
                             <td style="text-align:left;">
                                 <div class="bt-name">{{ $t->name }}</div>
-                                <div class="bt-meta">{{ $t->starts_on->format('M j') }}{{ $t->ends_on->ne($t->starts_on) ? '–'.$t->ends_on->format($t->ends_on->month === $t->starts_on->month ? 'j' : 'M j') : '' }} · {{ $t->city }}, {{ $t->state }}</div>
+                                <div class="bt-meta">{{ $t->starts_on->format('M j') }}{{ $t->ends_on->ne($t->starts_on) ? '–'.$t->ends_on->format($t->ends_on->month === $t->starts_on->month ? 'j' : 'M j') : '' }} · {{ $t->location() }}</div>
                             </td>
                             @foreach ($categories as $key => $label)
                                 @php $est = $item->expenses->firstWhere('category', $key)?->est_amount; @endphp
                                 <td>
-                                    <input class="input money" type="number" min="0" step="0.01" inputmode="decimal"
+                                    <input class="input money" type="number" min="0" max="999999.99" step="0.01" inputmode="decimal"
                                            wire:model.blur="amounts.{{ $item->id }}.{{ $key }}"
                                            placeholder="{{ $layer === 'actual' && $est !== null ? number_format($est, 2, '.', '') : '' }}"
                                            aria-label="{{ $t->name }} {{ $label }} {{ $layer === 'est' ? 'estimate' : 'actual' }}">

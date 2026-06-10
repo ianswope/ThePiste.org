@@ -42,7 +42,7 @@ class RegistrationReminderDigest extends Notification
                 $days = (int) now()->startOfDay()->diffInDays($t->starts_on, false);
                 $when = $t->starts_on->format('D M j').' ('.($days === 0 ? 'today' : "in {$days} day".($days === 1 ? '' : 's')).')';
                 $register = $t->source_url ? " — [register on AskFRED]({$t->source_url})" : '';
-                $mail->line("- **{$t->name}** · {$when} · {$t->city}, {$t->state}{$register}");
+                $mail->line("- **{$t->name}** · {$when} · {$t->location()}{$register}");
             }
         }
 

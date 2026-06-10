@@ -40,4 +40,15 @@ class Tournament extends Model
     {
         return $this->starts_on->format('F Y');
     }
+
+    /**
+     * Human location, e.g. "Chicago, IL". FIE/international events carry no
+     * US state, so fall back to the country and never render a dangling comma.
+     */
+    public function location(): string
+    {
+        $region = $this->state ?: ($this->country && $this->country !== 'US' ? $this->country : null);
+
+        return collect([$this->city, $region])->filter()->implode(', ');
+    }
 }

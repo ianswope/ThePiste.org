@@ -97,7 +97,7 @@ class TournamentResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->wrap()
-                    ->description(fn (Tournament $r) => trim("{$r->city}, {$r->state}", ', ')),
+                    ->description(fn (Tournament $r) => $r->location()),
                 Tables\Columns\TextColumn::make('region')
                     ->badge()
                     ->sortable(),

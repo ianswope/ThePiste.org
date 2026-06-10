@@ -150,6 +150,32 @@ class McpConnectorTest extends TestCase
             ->assertSee('season_stats');
     }
 
+    public function test_manage_plan_remove_preserves_recorded_costs(): void
+    {
+        $user = $this->makeUser();
+        $nac = Tournament::where('name', 'October NAC')->firstOrFail();
+
+        ThePisteServer::actingAs($user)
+            ->tool(ManagePlan::class, ['action' => 'add', 'tournament' => 'October NAC']);
+
+        $plan = $user->fencers()->first()->seasonPlans()->first();
+        $item = $plan->items()->where('tournament_id', $nac->id)->firstOrFail();
+        $item->expenses()->create(['category' => 'fees', 'actual_amount' => 400]);
+
+        // Removing an itemized event keeps it (skipped), not deletes it.
+        ThePisteServer::actingAs($user)
+            ->tool(ManagePlan::class, ['action' => 'remove', 'tournament' => (string) $nac->id])
+            ->assertOk();
+        $this->assertSame('skipped', $item->fresh()->status);
+        $this->assertSame(1, $item->expenses()->count());
+
+        // Re-adding re-activates the same row with its costs.
+        ThePisteServer::actingAs($user)
+            ->tool(ManagePlan::class, ['action' => 'add', 'tournament' => 'October NAC']);
+        $this->assertSame('planned', $item->fresh()->status);
+        $this->assertSame(1, $plan->items()->where('tournament_id', $nac->id)->count());
+    }
+
     public function test_get_plan_excludes_skipped_events(): void
     {
         $user = $this->makeUser();

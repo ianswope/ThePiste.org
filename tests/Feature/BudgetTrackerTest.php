@@ -125,6 +125,33 @@ class BudgetTrackerTest extends TestCase
         $this->assertSame(150.0, $item->load('expenses')->effectiveTotal());
     }
 
+    public function test_money_inputs_are_capped_to_the_column_range(): void
+    {
+        [$user, $plan, $item] = $this->makePlanWithItem();
+        $this->actingAs($user);
+
+        // Over-large typos must clamp, not overflow decimal(8,2) and 500 on MySQL.
+        Livewire::test(BudgetTracker::class)
+            ->set('budget', '5000000')
+            ->set("amounts.{$item->id}.hotel", '9999999');
+
+        $this->assertSame(999999.99, $plan->fresh()->budget);
+        $this->assertSame(999999.99, $item->fresh()->expenses->firstWhere('category', 'hotel')->est_amount);
+    }
+
+    public function test_ballpark_remainder_keeps_categories_reconciled(): void
+    {
+        [, $plan, $item] = $this->makePlanWithItem();
+        $item->update(['est_cost' => 900]); // a builder ballpark, never itemized
+
+        $summary = $plan->fresh()->load('items.expenses')->costSummary();
+
+        $this->assertSame(900.0, $summary['projected']);
+        $this->assertSame(0.0, array_sum($summary['by_category']));
+        // The unbroken-out remainder is surfaced so chips + ballpark = projected.
+        $this->assertSame(900.0, $summary['unitemized']);
+    }
+
     public function test_shared_plan_shows_effective_totals(): void
     {
         [, $plan, $item] = $this->makePlanWithItem();

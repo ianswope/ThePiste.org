@@ -52,7 +52,7 @@
                         <div class="bdate">{{ $t->starts_on->format('D M j') }}–{{ $t->ends_on->format('j') }} · {{ $t->region }}</div>
                         <div class="bname">{{ $t->name }}</div>
                         <div class="bmeta">
-                            <span>{{ $t->city }}, {{ $t->state }}</span>
+                            <span>{{ $t->location() }}</span>
                             @if ($r['distance'])<span>{{ round($r['distance']) }} mi · {{ $r['driveable'] ? 'drive' : 'fly' }}</span>@endif
                             @if (! empty($r['eligible']))<span>{{ implode(', ', $r['eligible']) }}</span>@endif
                             @if ($r['est_cost'])<span>~${{ number_format($r['est_cost']) }}</span>@endif

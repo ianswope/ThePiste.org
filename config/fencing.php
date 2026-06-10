@@ -41,6 +41,10 @@ return [
         'food' => 'Food',
     ],
 
+    // Money columns are decimal(8,2); cap inputs so an over-large typo can't
+    // overflow the column (a 500 on MySQL) — no real fencing season nears this.
+    'max_money' => 999999.99,
+
     // Tier priority for conflict resolution (higher wins the weekend).
     'tier_rank' => [
         'nac' => 6,

@@ -139,7 +139,7 @@
                                 </div>
                                 <div class="idbox">
                                     <h3 class="cname">{{ $t->name }}</h3>
-                                    <div class="cloc">{{ $t->city }}, {{ $t->state }}@if($t->region) · {{ $t->region }}@endif</div>
+                                    <div class="cloc">{{ $t->location() }}@if($t->region) · {{ $t->region }}@endif</div>
                                     @if ($r['non_negotiable'] || $inPlan || $t->level === 'local' || ($r['is_home'] && $r['tier'] !== 'home'))
                                         <div class="flagrow">
                                             @if ($r['non_negotiable'])<span class="flag anchor">Anchor</span>@endif
