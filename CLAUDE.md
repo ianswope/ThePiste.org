@@ -38,6 +38,7 @@ ssh root@thepiste.org 'cd /var/www/thepiste && ./deploy.sh'
 - **Error pages**: branded Laravel views in `resources/views/errors/` (404/403/500/503, self-contained CSS). `public/maintenance.html` is a static "back soon" page nginx serves on 502/503/504 (`error_page` in the vhost, internal-only) — covers php-fpm being down.
 - **Uptime**: DO uptime check "thepiste.org" (id f7a197a7-e9e5-484a-93de-3ed73d18b8ef, us_east + us_west).
 - **Mail**: Resend (`MAIL_MAILER=resend`, `RESEND_API_KEY` in prod `.env`), domain thepiste.org verified, from `noreply@thepiste.org`. Branded notification templates in `resources/views/vendor/mail/` (night header band, red-left/green-right ribbon, green button). Free tier: 3k/month. Local dev logs (`MAIL_MAILER=log`).
+- **Email digests**: `thepiste:notify-new-events` (daily 06:30, after the sync) mails each user the newly-cataloged events relevant to their fencers (TierService tiers nac/home/priority/drive, or any goal contribution); idempotent via `tournaments.alerted_at`. `thepiste:send-registration-reminders` (daily 07:00) nudges `planned` plan items entering their registration window; AskFRED has no true deadlines, so lead times encode norms (`config/fencing.php` `reminder_lead_days`: nationals/FIE 45 days, default 14); idempotent via `plan_items.reminded_at`. Both support `--dry-run`.
 
 ## MCP connector
 
@@ -52,5 +53,7 @@ Remote MCP server (laravel/mcp, Streamable HTTP) at `https://thepiste.org/mcp`, 
 ## Status
 
 - Phase 1 (foundation): scaffold, schema, full Region 2 2026-27 seed (51 events), computed calendar UI, Filament admin, live deploy.
-- Next: auth/login + roles, fencer profile builder (replaces the demo fencer), results tracking, travel planning, season-plan sharing/export.
+- Phase 2 (product): accounts (Fortify + passkeys/2FA), profile/goal builder, guided season builder, results tracking with goal progress, structured multi-goal system, travel budget, share/export, AskFRED auto-sync + 3x/week audit sweep, MCP connector, Resend mail, ops hardening (backups, error pages, uptime), Scoreboard redesign.
+- Phase 3 (in progress): email digests shipped (new-event alerts + registration reminders, see Ops).
+- Next: catalog expansion beyond Region 2, goal-driven calendar hints ("these events can advance this goal"), a "registered" toggle on plan items so reminders can stand down.
 - Local dev: `php artisan serve` + `npm run dev`. Seed: `php artisan migrate:fresh --seed`. Admin login seeded as `ian@promoeqp.com` (change the password in prod).

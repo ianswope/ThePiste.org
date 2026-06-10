@@ -1,0 +1,170 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Season;
+use App\Models\SeasonPlan;
+use App\Models\Tournament;
+use App\Models\User;
+use App\Notifications\NewEventsDigest;
+use App\Notifications\RegistrationReminderDigest;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+class NotificationsTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private Season $season;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Notification::fake();
+
+        $this->season = Season::create([
+            'name' => '2026-27', 'slug' => '2026-27',
+            'starts_on' => now()->subMonth(), 'ends_on' => now()->addMonths(10),
+            'is_active' => true,
+        ]);
+    }
+
+    private function makeUser(): User
+    {
+        $user = User::factory()->create();
+        $fencer = $user->fencers()->create([
+            'name' => 'Kid', 'weapon' => 'foil', 'age_group' => 'Junior',
+            'rating' => 'C', 'drive_radius_miles' => 450,
+            'home_lat' => 41.808, 'home_lng' => -88.011, 'home_state' => 'IL',
+        ]);
+        $fencer->weapons()->create(['weapon' => 'foil', 'rating' => 'C', 'is_primary' => true]);
+
+        return $user;
+    }
+
+    private function makeTournament(array $attrs = []): Tournament
+    {
+        $starts = $attrs['starts_on'] ?? now()->addDays(60);
+        $name = $attrs['name'] ?? 'Windy City RJCC';
+
+        return Tournament::create(array_merge([
+            'season_id' => $this->season->id,
+            'name' => $name,
+            'slug' => Str::slug($name).'-'.$starts->toDateString(),
+            'starts_on' => $starts,
+            'ends_on' => $starts,
+            'city' => 'Chicago', 'state' => 'IL', 'region' => 'R2',
+            'lat' => 41.878, 'lng' => -87.629,
+            'level' => 'regional',
+            'circuits' => ['RJCC'],
+            'contested_events' => ['JNR', 'CDT', 'D1A'],
+        ], $attrs));
+    }
+
+    public function test_new_event_digest_goes_to_matching_users_once(): void
+    {
+        $user = $this->makeUser();
+        $event = $this->makeTournament();
+
+        $this->artisan('thepiste:notify-new-events')->assertSuccessful();
+
+        Notification::assertSentTo($user, NewEventsDigest::class, function (NewEventsDigest $n) use ($event) {
+            $rows = $n->groups[0]['rows'];
+
+            return count($n->groups) === 1
+                && $n->groups[0]['fencer']->name === 'Kid'
+                && collect($rows)->contains(fn ($r) => $r['tournament']->is($event));
+        });
+        $this->assertNotNull($event->fresh()->alerted_at);
+
+        // A second run finds nothing new.
+        $this->artisan('thepiste:notify-new-events')->assertSuccessful();
+        Notification::assertSentToTimes($user, NewEventsDigest::class, 1);
+    }
+
+    public function test_irrelevant_events_are_marked_but_not_emailed(): void
+    {
+        $this->makeUser();
+        $event = $this->makeTournament([
+            'name' => 'Bakersfield Y10 Open',
+            'city' => 'Bakersfield', 'state' => 'CA', 'region' => 'R4',
+            'lat' => 35.373, 'lng' => -119.018,
+            'circuits' => null, 'contested_events' => ['Y10'],
+        ]);
+
+        $this->artisan('thepiste:notify-new-events')->assertSuccessful();
+
+        Notification::assertNothingSent();
+        $this->assertNotNull($event->fresh()->alerted_at);
+    }
+
+    public function test_already_alerted_and_past_events_are_skipped(): void
+    {
+        $user = $this->makeUser();
+        $this->makeTournament(['alerted_at' => now()]);
+        $this->makeTournament(['name' => 'Last Month RJCC', 'starts_on' => now()->subDays(10)]);
+
+        $this->artisan('thepiste:notify-new-events')->assertSuccessful();
+
+        Notification::assertNothingSentTo($user);
+    }
+
+    public function test_registration_reminder_for_events_inside_their_window(): void
+    {
+        $user = $this->makeUser();
+        $fencer = $user->fencers()->first();
+        $plan = SeasonPlan::create(['fencer_id' => $fencer->id, 'season_id' => $this->season->id]);
+
+        $soon = $this->makeTournament([
+            'name' => 'Next Week RJCC',
+            'starts_on' => now()->addDays(10),
+            'source_url' => 'https://www.askfred.net/tournaments/abc',
+        ]);
+        $farRegional = $this->makeTournament(['name' => 'Far Off RJCC', 'starts_on' => now()->addDays(30)]);
+        $farNac = $this->makeTournament([
+            'name' => 'December NAC', 'starts_on' => now()->addDays(30),
+            'is_nac' => true, 'level' => 'national', 'region' => 'NATIONAL',
+        ]);
+
+        $dueItem = $plan->items()->create(['tournament_id' => $soon->id]);
+        $notDueItem = $plan->items()->create(['tournament_id' => $farRegional->id]);
+        $nacItem = $plan->items()->create(['tournament_id' => $farNac->id]);
+
+        $this->artisan('thepiste:send-registration-reminders')->assertSuccessful();
+
+        // One digest: the 10-day regional and the 30-day NAC (6-week lead),
+        // but not the 30-day regional (2-week lead).
+        Notification::assertSentTo($user, RegistrationReminderDigest::class, function (RegistrationReminderDigest $n) {
+            $names = collect($n->groups[0]['items'])->map(fn ($i) => $i->tournament->name);
+
+            return $names->contains('Next Week RJCC')
+                && $names->contains('December NAC')
+                && ! $names->contains('Far Off RJCC');
+        });
+        Notification::assertSentToTimes($user, RegistrationReminderDigest::class, 1);
+
+        $this->assertNotNull($dueItem->fresh()->reminded_at);
+        $this->assertNotNull($nacItem->fresh()->reminded_at);
+        $this->assertNull($notDueItem->fresh()->reminded_at);
+
+        // Reminded items are not nudged again.
+        $this->artisan('thepiste:send-registration-reminders')->assertSuccessful();
+        Notification::assertSentToTimes($user, RegistrationReminderDigest::class, 1);
+    }
+
+    public function test_no_reminder_for_registered_or_skipped_items(): void
+    {
+        $user = $this->makeUser();
+        $fencer = $user->fencers()->first();
+        $plan = SeasonPlan::create(['fencer_id' => $fencer->id, 'season_id' => $this->season->id]);
+
+        $soon = $this->makeTournament(['starts_on' => now()->addDays(5)]);
+        $plan->items()->create(['tournament_id' => $soon->id, 'status' => 'registered']);
+
+        $this->artisan('thepiste:send-registration-reminders')->assertSuccessful();
+
+        Notification::assertNothingSentTo($user);
+    }
+}

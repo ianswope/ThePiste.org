@@ -23,6 +23,15 @@ return [
     // Default drive radius (miles) when a fencer hasn't set one.
     'default_drive_radius' => 450,
 
+    // Days before an event's start to nudge unregistered plan items. We don't
+    // have true registration deadlines from AskFRED, so lead times encode the
+    // norms: national events (NACs, JOs, Championships) close ~6 weeks out;
+    // club/regional events typically close 1-2 weeks out.
+    'reminder_lead_days' => [
+        'national' => 45,
+        'default' => 14,
+    ],
+
     // Tier priority for conflict resolution (higher wins the weekend).
     'tier_rank' => [
         'nac' => 6,
