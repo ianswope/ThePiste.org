@@ -38,7 +38,7 @@ trait ResolvesFencer
 
     protected function activeSeason(): Season
     {
-        return Season::where('is_active', true)->first() ?? Season::firstOrFail();
+        return Season::active();
     }
 
     protected function plan(Fencer $fencer): SeasonPlan

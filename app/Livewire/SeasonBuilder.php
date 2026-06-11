@@ -2,7 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\ClampsMoney;
 use App\Livewire\Concerns\ResolvesActiveFencer;
+use App\Models\Goal;
 use App\Models\SeasonPlan;
 use App\Services\TierService;
 use Illuminate\Support\Collection;
@@ -14,6 +16,7 @@ use Livewire\Component;
 #[Layout('layouts.builder')]
 class SeasonBuilder extends Component
 {
+    use ClampsMoney;
     use ResolvesActiveFencer;
 
     public SeasonPlan $plan;
@@ -116,18 +119,7 @@ class SeasonBuilder extends Component
 
         $weapon = $this->goalType === 'develop' ? null : ($this->goalWeapon ?: $this->fencer->weapon);
 
-        // Same type + weapon replaces (one rating goal per weapon, etc.).
-        $this->fencer->goals()->active()
-            ->where('type', $this->goalType)
-            ->where('weapon', $weapon)
-            ->delete();
-
-        $this->fencer->goals()->create([
-            'type' => $this->goalType,
-            'weapon' => $weapon,
-            'params' => $params,
-            'status' => 'active',
-        ]);
+        Goal::createForFencer($this->fencer, $this->goalType, $weapon, $params);
 
         $this->goalType = '';
         unset($this->rows);
@@ -151,9 +143,7 @@ class SeasonBuilder extends Component
             return;
         }
 
-        $cost = is_numeric($value)
-            ? min((float) config('fencing.max_money'), max(0, round((float) $value, 2)))
-            : null;
+        $cost = $this->clampMoney($value);
         $item->update(['est_cost' => $cost]);
         $this->costs[$id] = $cost;
     }

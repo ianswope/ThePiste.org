@@ -62,7 +62,7 @@ class CalendarController extends Controller
 
     private function render(TierService $tiers, Fencer $fencer, $fencers, bool $isDemo, array $planIds = [], array $planNotes = []): View
     {
-        $season = Season::where('is_active', true)->first() ?? Season::firstOrFail();
+        $season = Season::active();
 
         $rows = $tiers->evaluate($fencer, $season->tournaments()->with('hostClub')->get())
             ->reject(fn ($r) => $r['tier'] === 'ineligible');

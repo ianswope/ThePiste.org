@@ -29,7 +29,7 @@ class NotifyNewEvents extends Command
         // Scope to the active season: the digest links to the season builder,
         // which only shows that season — alerting on a future season's freshly
         // imported events would point at a builder that doesn't list them.
-        $season = Season::where('is_active', true)->first() ?? Season::firstOrFail();
+        $season = Season::active();
 
         $new = Tournament::where('season_id', $season->id)
             ->whereNull('alerted_at')

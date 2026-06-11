@@ -25,7 +25,7 @@ class SyncAskFred extends Command
     {
         $season = $this->option('season')
             ? Season::where('slug', $this->option('season'))->firstOrFail()
-            : (Season::where('is_active', true)->first() ?? Season::firstOrFail());
+            : Season::active();
 
         $full = (bool) $this->option('full');
         $from = $this->option('from') ?: ($full ? $season->starts_on->toDateString() : now()->toDateString());

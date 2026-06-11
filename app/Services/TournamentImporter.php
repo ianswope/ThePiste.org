@@ -159,7 +159,7 @@ class TournamentImporter
             'lat' => $lat,
             'lng' => $lng,
             'is_nac' => $this->truthy($row['is_nac'] ?? ''),
-            'level' => in_array($row['level'] ?? '', ['local', 'regional', 'national', 'fie_cadet', 'fie_junior', 'fie_senior'], true)
+            'level' => array_key_exists($row['level'] ?? '', Tournament::LEVELS)
                 ? $row['level'] : 'regional',
             'country' => $country,
             'circuits' => $this->splitList($row['circuits'] ?? '') ?: null,

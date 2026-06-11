@@ -14,6 +14,12 @@ use Illuminate\Support\Collection;
  */
 class TierService
 {
+    /** The strategic tiers a tournament can fall into, strongest first. */
+    public const TIERS = ['nac', 'home', 'priority', 'drive', 'fly', 'skip', 'ineligible'];
+
+    /** Tiers that anchor a season outright (a priority event also anchors when it clears the category threshold). */
+    public const ANCHOR_TIERS = ['nac', 'home'];
+
     public function __construct(private GoalScorer $goalScorer) {}
 
     /**
@@ -62,7 +68,7 @@ class TierService
                     'is_home' => $isHome,
                     'is_nac' => (bool) $t->is_nac,
                     'tier' => $tier,
-                    'non_negotiable' => in_array($tier, ['nac', 'home'], true)
+                    'non_negotiable' => in_array($tier, self::ANCHOR_TIERS, true)
                         || ($tier === 'priority' && $eligibleCount >= $threshold),
                     'advances' => $advances,
                     'goal_score' => round(array_sum(array_column($advances, 'weight')), 2),

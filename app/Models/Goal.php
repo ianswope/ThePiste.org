@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 /**
  * A structured season goal. Types:
@@ -27,6 +28,29 @@ class Goal extends Model
     public function fencer(): BelongsTo
     {
         return $this->belongsTo(Fencer::class);
+    }
+
+    /**
+     * Upsert a goal for a fencer: one active goal per type+weapon, so the new
+     * one replaces any existing match. Atomic so a failed create can't leave the
+     * fencer with the old goal deleted and nothing in its place. Shared by the
+     * season builder and the set-goal MCP tool.
+     */
+    public static function createForFencer(Fencer $fencer, string $type, ?string $weapon, array $params): self
+    {
+        return DB::transaction(function () use ($fencer, $type, $weapon, $params) {
+            $fencer->goals()->active()
+                ->where('type', $type)
+                ->where('weapon', $weapon)
+                ->delete();
+
+            return $fencer->goals()->create([
+                'type' => $type,
+                'weapon' => $weapon,
+                'params' => $params,
+                'status' => 'active',
+            ]);
+        });
     }
 
     public function scopeActive(Builder $query): Builder

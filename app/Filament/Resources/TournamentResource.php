@@ -36,14 +36,7 @@ class TournamentResource extends Resource
                 Forms\Components\Toggle::make('is_nac')
                     ->label('NAC / national event'),
                 Forms\Components\Select::make('level')
-                    ->options([
-                        'local' => 'Local / club event',
-                        'regional' => 'Regional (USAF circuit)',
-                        'national' => 'National (USAF)',
-                        'fie_cadet' => 'FIE Cadet',
-                        'fie_junior' => 'FIE Junior',
-                        'fie_senior' => 'FIE Senior / World Cup',
-                    ])
+                    ->options(Tournament::LEVELS)
                     ->default('regional')
                     ->required(),
                 Forms\Components\TextInput::make('country')
@@ -66,11 +59,7 @@ class TournamentResource extends Resource
                     ->numeric(),
                 Forms\Components\Select::make('contested_events')
                     ->multiple()
-                    ->options([
-                        'Y10' => 'Y10', 'Y12' => 'Y12', 'Y14' => 'Y14',
-                        'CDT' => 'Cadet', 'JNR' => 'Junior',
-                        'D1A' => 'Div 1A', 'DV2' => 'Div 2', 'VET' => 'Veteran',
-                    ])
+                    ->options(Tournament::CATEGORIES)
                     ->required()
                     ->columnSpanFull(),
                 Forms\Components\TagsInput::make('circuits')

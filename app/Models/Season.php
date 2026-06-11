@@ -21,4 +21,14 @@ class Season extends Model
     {
         return $this->hasMany(Tournament::class);
     }
+
+    /**
+     * The season the app operates on: the flagged-active one, falling back to
+     * the only/first season. Centralizes the "current season" lookup that the
+     * calendar, builder, MCP tools, and digest commands all need.
+     */
+    public static function active(): self
+    {
+        return static::where('is_active', true)->first() ?? static::firstOrFail();
+    }
 }

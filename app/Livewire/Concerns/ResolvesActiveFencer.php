@@ -26,7 +26,7 @@ trait ResolvesActiveFencer
         }
 
         $this->fencer = $fencers->firstWhere('id', session('active_fencer_id')) ?? $fencers->first();
-        $this->season = Season::where('is_active', true)->first() ?? Season::firstOrFail();
+        $this->season = Season::active();
 
         return null;
     }

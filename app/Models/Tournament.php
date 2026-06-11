@@ -7,6 +7,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Tournament extends Model
 {
+    /** Sanctioning levels (value => admin label). The only source of the set. */
+    public const LEVELS = [
+        'local' => 'Local / club event',
+        'regional' => 'Regional (USAF circuit)',
+        'national' => 'National (USAF)',
+        'fie_cadet' => 'FIE Cadet',
+        'fie_junior' => 'FIE Junior',
+        'fie_senior' => 'FIE Senior / World Cup',
+    ];
+
+    /** Contested-event categories (code => admin label). OPEN is rating-earning. */
+    public const CATEGORIES = [
+        'Y10' => 'Y10', 'Y12' => 'Y12', 'Y14' => 'Y14',
+        'CDT' => 'Cadet', 'JNR' => 'Junior',
+        'D1A' => 'Div 1A', 'DV2' => 'Div 2', 'OPEN' => 'Open / Senior', 'VET' => 'Veteran',
+    ];
+
     protected $fillable = [
         'season_id', 'host_club_id', 'name', 'slug', 'external_id', 'starts_on', 'ends_on', 'level', 'country',
         'city', 'state', 'region', 'lat', 'lng', 'is_nac',

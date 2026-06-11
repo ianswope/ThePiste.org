@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\ResolvesFencer;
+use App\Models\Goal;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -55,17 +56,7 @@ class SetGoal extends Tool
 
         $weapon = $data['type'] === 'develop' ? null : ($data['weapon'] ?? $fencer->weapon);
 
-        $fencer->goals()->active()
-            ->where('type', $data['type'])
-            ->where('weapon', $weapon)
-            ->delete();
-
-        $goal = $fencer->goals()->create([
-            'type' => $data['type'],
-            'weapon' => $weapon,
-            'params' => $params,
-            'status' => 'active',
-        ]);
+        $goal = Goal::createForFencer($fencer, $data['type'], $weapon, $params);
 
         $all = $fencer->activeGoals()->map->label()->implode('; ');
 
