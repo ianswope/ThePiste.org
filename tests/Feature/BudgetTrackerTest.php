@@ -51,9 +51,10 @@ class BudgetTrackerTest extends TestCase
             ->set("amounts.{$item->id}.fees", '212.40');
 
         $item->refresh()->load('expenses');
-        $this->assertSame(200.0, $item->expenses->firstWhere('category', 'fees')->est_amount);
-        $this->assertSame(212.4, $item->expenses->firstWhere('category', 'fees')->actual_amount);
-        $this->assertSame(350.5, $item->expenses->firstWhere('category', 'hotel')->est_amount);
+        // Money casts to decimal:2 (string), so compare numerically, not by type.
+        $this->assertEquals(200.0, $item->expenses->firstWhere('category', 'fees')->est_amount);
+        $this->assertEquals(212.4, $item->expenses->firstWhere('category', 'fees')->actual_amount);
+        $this->assertEquals(350.5, $item->expenses->firstWhere('category', 'hotel')->est_amount);
 
         // Actuals replace estimates in the trip total; hotel still uses the estimate.
         $this->assertSame(562.9, $item->effectiveTotal());
@@ -135,8 +136,8 @@ class BudgetTrackerTest extends TestCase
             ->set('budget', '5000000')
             ->set("amounts.{$item->id}.hotel", '9999999');
 
-        $this->assertSame(999999.99, $plan->fresh()->budget);
-        $this->assertSame(999999.99, $item->fresh()->expenses->firstWhere('category', 'hotel')->est_amount);
+        $this->assertEquals(999999.99, $plan->fresh()->budget);
+        $this->assertEquals(999999.99, $item->fresh()->expenses->firstWhere('category', 'hotel')->est_amount);
     }
 
     public function test_ballpark_remainder_keeps_categories_reconciled(): void

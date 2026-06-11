@@ -11,7 +11,7 @@ class SeasonPlan extends Model
 {
     protected $fillable = ['fencer_id', 'season_id', 'share_slug', 'budget'];
 
-    protected $casts = ['budget' => 'float'];
+    protected $casts = ['budget' => 'decimal:2'];
 
     public function fencer(): BelongsTo
     {
@@ -75,8 +75,8 @@ class SeasonPlan extends Model
             'unitemized' => round($projected - array_sum($byCategory), 2),
             'done' => $this->items->where('status', 'attended')->count(),
             'total' => $this->items->count(),
-            'budget' => $this->budget,
-            'surplus' => $this->budget !== null ? round($this->budget - $projected, 2) : null,
+            'budget' => $this->budget !== null ? (float) $this->budget : null,
+            'surplus' => $this->budget !== null ? round((float) $this->budget - $projected, 2) : null,
         ];
     }
 }

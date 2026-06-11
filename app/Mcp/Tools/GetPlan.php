@@ -45,7 +45,7 @@ class GetPlan extends Tool
                 'drives' => $rows->filter(fn ($r) => $r['driveable'])->count(),
                 'flights' => $rows->filter(fn ($r) => ! $r['driveable'] && $r['distance'] !== null)->count(),
                 'est_cost' => round($plan->projectedTotal()),
-                'budget' => $plan->budget,
+                'budget' => $plan->budget !== null ? (float) $plan->budget : null,
             ],
             'events' => $rows->map(fn ($r) => [
                 'tournament_id' => $r['tournament']->id,

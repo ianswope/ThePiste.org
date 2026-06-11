@@ -22,7 +22,7 @@ class PlanItem extends Model
         'travel_status', 'lodging_status', 'coaching_status',
     ];
 
-    protected $casts = ['est_cost' => 'float', 'reminded_at' => 'datetime'];
+    protected $casts = ['est_cost' => 'decimal:2', 'reminded_at' => 'datetime'];
 
     public function plan(): BelongsTo
     {

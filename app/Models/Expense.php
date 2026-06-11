@@ -9,7 +9,7 @@ class Expense extends Model
 {
     protected $fillable = ['plan_item_id', 'category', 'est_amount', 'actual_amount'];
 
-    protected $casts = ['est_amount' => 'float', 'actual_amount' => 'float'];
+    protected $casts = ['est_amount' => 'decimal:2', 'actual_amount' => 'decimal:2'];
 
     public function planItem(): BelongsTo
     {
