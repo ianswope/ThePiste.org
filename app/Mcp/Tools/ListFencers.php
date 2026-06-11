@@ -30,7 +30,13 @@ class ListFencers extends Tool
             'region' => $f->region(),
             'home_zip' => $f->home_zip,
             'drive_radius_miles' => $f->driveRadius(),
-            'goals' => $f->activeGoals()->map->label()->values(),
+            // Objects, matching get-progress, so a caller sees one goal shape
+            // across tools rather than bare strings here and objects there.
+            'goals' => $f->activeGoals()->map(fn ($g) => [
+                'type' => $g->type,
+                'weapon' => $g->weapon,
+                'label' => $g->label(),
+            ])->values(),
             'rating_progress_to_goal' => $f->ratingProgress(),
         ])->values());
     }

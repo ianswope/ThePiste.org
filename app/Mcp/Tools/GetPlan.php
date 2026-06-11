@@ -35,10 +35,13 @@ class GetPlan extends Tool
             ->filter(fn ($r) => $items->has($r['tournament']->id))
             ->values();
 
+        $categories = array_keys(config('fencing.expense_categories'));
+
         return Response::json([
             'fencer' => $fencer->name,
             'season' => $season->name,
             'share_url' => $plan->share_slug ? route('plan.share', $plan->share_slug) : null,
+            'ics_url' => $plan->share_slug ? route('plan.ics', $plan->share_slug) : null,
             'tallies' => [
                 'events' => $rows->count(),
                 'nacs' => $rows->where('is_nac', true)->count(),
@@ -47,16 +50,36 @@ class GetPlan extends Tool
                 'est_cost' => round($plan->projectedTotal()),
                 'budget' => $plan->budget !== null ? (float) $plan->budget : null,
             ],
-            'events' => $rows->map(fn ($r) => [
-                'tournament_id' => $r['tournament']->id,
-                'dates' => $r['tournament']->starts_on->toDateString(),
-                'name' => $r['tournament']->name,
-                'location' => $r['tournament']->location(),
-                'tier' => $r['tier'],
-                'travel' => $r['distance'] === null ? null : ($r['driveable'] ? 'drive' : 'fly'),
-                'distance_miles' => $r['distance'] !== null ? round($r['distance']) : null,
-                'conflicts_with' => $r['conflict_with'],
-            ])->values(),
+            'events' => $rows->map(function ($r) use ($items, $categories) {
+                $item = $items->get($r['tournament']->id);
+
+                return [
+                    'tournament_id' => $r['tournament']->id,
+                    'dates' => $r['tournament']->starts_on->toDateString().' to '.$r['tournament']->ends_on->toDateString(),
+                    'name' => $r['tournament']->name,
+                    'location' => $r['tournament']->location(),
+                    'tier' => $r['tier'],
+                    'travel' => $r['distance'] === null ? null : ($r['driveable'] ? 'drive' : 'fly'),
+                    'distance_miles' => $r['distance'] !== null ? round($r['distance']) : null,
+                    'conflicts_with' => $r['conflict_with'],
+                    // Prep + budget so an agent can read the same state the
+                    // prep and budget pages show, not just the calendar facts.
+                    'status' => $item?->status,
+                    'paid' => $item?->paid,
+                    'prep' => $item ? [
+                        'travel' => $item->travel_status,
+                        'lodging' => $item->lodging_status,
+                        'coaching' => $item->coaching_status,
+                        'done' => $item->prepProgress()['done'],
+                        'total' => $item->prepProgress()['total'],
+                    ] : null,
+                    'cost' => $item ? round($item->effectiveTotal(), 2) : null,
+                    'expenses' => $item
+                        ? collect($categories)->mapWithKeys(fn ($c) => [$c => $item->categoryAmount($c)])->filter(fn ($v) => $v !== null)->all()
+                        : [],
+                    'notes' => $item?->notes,
+                ];
+            })->values(),
         ]);
     }
 }
