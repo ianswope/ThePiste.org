@@ -125,6 +125,10 @@ class TierService
             ->filter(fn ($r) => $r['tier'] !== 'ineligible')
             ->groupBy(fn ($r) => $r['tournament']->starts_on->copy()->startOfWeek()->toDateString());
 
+        // Map tournament id -> row index once, so tagging a loser is a lookup
+        // rather than an O(n) scan of $rows inside the per-conflict loop.
+        $indexById = $rows->mapWithKeys(fn ($r, $i) => [$r['tournament']->id => $i]);
+
         foreach ($byWeekend as $group) {
             if ($group->count() < 2) {
                 continue;
@@ -138,7 +142,7 @@ class TierService
                     continue;
                 }
 
-                $idx = $rows->search(fn ($r) => $r['tournament']->id === $row['tournament']->id);
+                $idx = $indexById[$row['tournament']->id];
                 $updated = $rows[$idx];
                 $updated['conflict_with'] = $winner['tournament']->name;
                 $rows[$idx] = $updated;

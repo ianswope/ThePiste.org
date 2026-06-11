@@ -22,6 +22,9 @@ class NotifyNewEvents extends Command
     /** Tiers worth interrupting someone's inbox for. */
     private const RELEVANT_TIERS = ['nac', 'home', 'priority', 'drive'];
 
+    /** Above this many unalerted events in one run, flag a likely season-rollover blast. */
+    private const LARGE_RUN_THRESHOLD = 40;
+
     public function handle(TierService $tiers): int
     {
         $dry = (bool) $this->option('dry-run');
@@ -41,6 +44,14 @@ class NotifyNewEvents extends Command
             $this->info('No new events to alert.');
 
             return self::SUCCESS;
+        }
+
+        // A whole season activating at once (its events imported with a null
+        // alerted_at) would alert everyone in one pass. Per-user relevance
+        // filtering bounds the blast, but flag it so a rollover is noticed.
+        if ($new->count() > self::LARGE_RUN_THRESHOLD) {
+            $this->warn("{$new->count()} unalerted events in one run — likely a season rollover.");
+            logger()->warning('Large new-event digest run', ['count' => $new->count()]);
         }
 
         $sent = 0;

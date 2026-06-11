@@ -51,17 +51,21 @@ class SeasonBuilder extends Component
             $this->plan->update(['share_slug' => Str::random(24)]);
         }
         $this->goalWeapon = $this->fencer->weapon;
+
+        // Load the plan's items once, then derive selection, costs, and the
+        // empty-plan check from that one collection instead of three queries.
+        $items = $this->plan->items()->get();
         // "In plan" means an active item — a skipped one is off the plan but kept
         // on record (its costs survive), so it shows here as available to re-add.
-        $this->selected = $this->plan->items()->where('status', '!=', 'skipped')
-            ->pluck('tournament_id')->map(fn ($id) => (int) $id)->all();
-        $this->costs = $this->plan->items()->pluck('est_cost', 'tournament_id')
+        $this->selected = $items->where('status', '!=', 'skipped')
+            ->pluck('tournament_id')->map(fn ($id) => (int) $id)->values()->all();
+        $this->costs = $items->pluck('est_cost', 'tournament_id')
             ->map(fn ($c) => $c !== null ? (float) $c : null)->all();
 
         // First visit (an empty plan): seed the recommended anchors. Keyed off
         // item count, not $selected, so a plan where everything was skipped
         // isn't treated as new and re-seeded.
-        if ($this->plan->items()->count() === 0) {
+        if ($items->isEmpty()) {
             $anchors = $this->rows->filter(fn ($r) => $r['non_negotiable'])
                 ->map(fn ($r) => $r['tournament']->id)->values()->all();
             // firstOrCreate keeps a concurrent first-visit (two tabs) from

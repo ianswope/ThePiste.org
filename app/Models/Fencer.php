@@ -68,8 +68,10 @@ class Fencer extends Model
     {
         $weapon ??= $this->weapon;
 
-        return $this->goals()->active()->where('type', 'rating')
-            ->get()
+        // Reuse activeGoals() so a loaded goals relation (e.g. ResultsTracker
+        // calls loadMissing('goals') once) isn't re-queried per call.
+        return $this->activeGoals()
+            ->where('type', 'rating')
             ->filter(fn (Goal $g) => $g->weapon === null || $g->weapon === $weapon)
             ->map(fn (Goal $g) => $g->param('target_rating'))
             ->filter()

@@ -4,8 +4,8 @@ namespace App\Livewire;
 
 use App\Livewire\Concerns\ResolvesActiveFencer;
 use App\Models\Fencer;
-use App\Models\Result;
 use App\Services\ResultRecorder;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -75,10 +75,20 @@ class ResultsTracker extends Component
         $this->fencer->results()->whereKey($resultId)->delete();
     }
 
+    /** The season's tournaments as id => "M j · Name", for the result-log dropdown.
+     *  Memoized for the request: the catalog doesn't change within a session. */
+    #[Computed]
+    public function tournaments(): array
+    {
+        return $this->season->tournaments()->orderBy('starts_on')->get()
+            ->mapWithKeys(fn ($t) => [$t->id => $t->starts_on->format('M j').' · '.$t->name])
+            ->all();
+    }
+
     /** Per-goal progress derived from logged results. Path-aware, never claims "qualified". */
     private function goalCards($seasonResults): array
     {
-        return $this->fencer->goals()->active()->orderBy('created_at')->get()->map(function ($g) use ($seasonResults) {
+        return $this->fencer->activeGoals()->sortBy('created_at')->map(function ($g) use ($seasonResults) {
             $card = ['id' => $g->id, 'type' => $g->type, 'label' => $g->label()];
 
             return $card + match ($g->type) {
@@ -114,6 +124,10 @@ class ResultsTracker extends Component
 
     public function render()
     {
+        // Load goals once so goalCards, targetRating, and ratingProgress below
+        // all read the same in-memory relation instead of re-querying per call.
+        $this->fencer->loadMissing('goals');
+
         $results = $this->fencer->results()
             ->with('tournament')
             ->orderByDesc('fenced_on')
@@ -133,8 +147,7 @@ class ResultsTracker extends Component
                 'top8' => $seasonResults->filter(fn ($r) => $r->place <= 8)->count(),
                 'points' => round($seasonResults->sum(fn ($r) => $r->points ?? 0), 1),
             ],
-            'tournaments' => $this->season->tournaments()->orderBy('starts_on')->get()
-                ->mapWithKeys(fn ($t) => [$t->id => $t->starts_on->format('M j').' · '.$t->name]),
+            'tournaments' => $this->tournaments,
             'ladder' => Fencer::RATING_LADDER,
             'progress' => $this->fencer->ratingProgress(),
         ]);
