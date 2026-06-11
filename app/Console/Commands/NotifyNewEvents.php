@@ -50,7 +50,7 @@ class NotifyNewEvents extends Command
         // alerted_at) would alert everyone in one pass. Per-user relevance
         // filtering bounds the blast, but flag it so a rollover is noticed.
         if ($new->count() > self::LARGE_RUN_THRESHOLD) {
-            $this->warn("{$new->count()} unalerted events in one run — likely a season rollover.");
+            $this->warn("{$new->count()} unalerted events in one run, likely a season rollover.");
             logger()->warning('Large new-event digest run', ['count' => $new->count()]);
         }
 

@@ -18,7 +18,7 @@ trait ResolvesFencer
         $fencers = $request->user()->fencers()->with(['weapons', 'homeClub'])->get();
 
         if ($fencers->isEmpty()) {
-            abort(422, 'No fencer profile yet — create one at thepiste.org first.');
+            abort(422, 'No fencer profile yet; create one at thepiste.org first.');
         }
 
         $needle = trim((string) $request->get('fencer', ''));

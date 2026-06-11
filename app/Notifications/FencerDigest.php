@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notification;
 
 /**
  * Shared skeleton for the per-account digests: greeting, a bold header per
- * fencer with its bullet list, action button, and the "— ThePiste" sign-off.
+ * fencer with its bullet list, action button, and the "ThePiste" sign-off.
  * Subclasses supply the subject, intro, how to pull and format each fencer's
  * rows, and the closing call to action.
  *
@@ -74,7 +74,7 @@ abstract class FencerDigest extends Notification implements ShouldQueue
 
         $this->callToAction($mail);
 
-        return $mail->salutation('— ThePiste');
+        return $mail->salutation('ThePiste');
     }
 
     abstract protected function subject(): string;

@@ -58,7 +58,7 @@
         <form wire:submit="save">
             <div class="form-grid">
                 <div class="field full">
-                    <label for="tournament_id">Tournament <span style="color:var(--faint)">(optional — pick from the calendar)</span></label>
+                    <label for="tournament_id">Tournament <span style="color:var(--faint)">(optional, pick from the calendar)</span></label>
                     <select class="input" id="tournament_id" wire:model="tournament_id">
                         <option value="">Not on the calendar / other</option>
                         @foreach ($tournaments as $id => $label)
@@ -86,8 +86,8 @@
                 <div class="field">
                     <label for="category">Category</label>
                     <select class="input" id="category" wire:model="category">
-                        <option value="">—</option>
-                        @foreach (['Y10','Y12','Y14','CDT','JNR','D1A','DV2','OPEN','VET'] as $cat)
+                        <option value="">–</option>
+                        @foreach (array_keys(\App\Models\Tournament::CATEGORIES) as $cat)
                             <option value="{{ $cat }}">{{ $cat }}</option>
                         @endforeach
                     </select>

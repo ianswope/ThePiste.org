@@ -68,13 +68,13 @@ class GoalScorer
         $target = $goal->param('target_rating');
 
         if ($t->is_nac && $earning) {
-            return ['why' => 'NAC field with '.implode('/', $earning)." — the strongest {$target}-earning strips of the season", 'weight' => 3.0];
+            return ['why' => 'NAC field with '.implode('/', $earning).": the strongest {$target}-earning strips of the season", 'weight' => 3.0];
         }
         if ($earning && in_array('ROC', $t->circuits ?? [], true)) {
-            return ['why' => 'ROC with '.implode('/', $earning)." — fields here regularly rate {$target}s", 'weight' => 2.5];
+            return ['why' => 'ROC with '.implode('/', $earning).": fields here regularly rate {$target}s", 'weight' => 2.5];
         }
         if ($earning) {
-            return ['why' => implode('/', $earning)." contested — a {$target} is earnable if the field is strong", 'weight' => 1.5];
+            return ['why' => implode('/', $earning)." contested; a {$target} is earnable if the field is strong", 'weight' => 1.5];
         }
 
         return null;
@@ -126,7 +126,7 @@ class GoalScorer
     private function develop(Goal $goal, Tournament $t, array $ctx): ?array
     {
         if ($t->level === 'local' && $ctx['driveable']) {
-            return ['why' => 'Low-pressure local field, an easy drive — ideal mileage', 'weight' => 1.5];
+            return ['why' => 'Low-pressure local field, an easy drive: ideal mileage', 'weight' => 1.5];
         }
         if ($ctx['driveable'] && in_array($ctx['tier'], ['drive', 'priority', 'home'], true)) {
             $dist = $ctx['distance'] !== null ? round($ctx['distance']).' mi' : 'short';

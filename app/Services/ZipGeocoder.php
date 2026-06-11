@@ -30,7 +30,9 @@ class ZipGeocoder
                 return null;
             }
             $place = $res->json('places.0');
-            if (! $place) {
+            // A 200 with missing or non-numeric coordinates must not cast to
+            // (0,0) and cache a point in the Atlantic; treat it as a miss.
+            if (! $place || ! is_numeric($place['latitude'] ?? null) || ! is_numeric($place['longitude'] ?? null)) {
                 return null;
             }
 

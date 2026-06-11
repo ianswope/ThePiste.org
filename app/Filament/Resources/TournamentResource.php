@@ -95,7 +95,7 @@ class TournamentResource extends Resource
                     ->boolean(),
                 Tables\Columns\TextColumn::make('hostClub.name')
                     ->label('Home club')
-                    ->placeholder('—')
+                    ->placeholder('–')
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('contested_events')
                     ->label('Categories')

@@ -36,8 +36,8 @@ class AppServiceProvider extends ServiceProvider
                 ->line('Someone (hopefully you) asked to reset the password for your ThePiste account. Tap the button and pick a new one.')
                 ->action('Choose a new password', $url)
                 ->line("This link is good for {$expires} minutes.")
-                ->line("Didn't ask for this? Just ignore it — your password stays as it is, and your season plan isn't going anywhere.")
-                ->salutation('— ThePiste');
+                ->line("Didn't ask for this? Just ignore it; your password stays as it is, and your season plan isn't going anywhere.")
+                ->salutation('ThePiste');
         });
     }
 }

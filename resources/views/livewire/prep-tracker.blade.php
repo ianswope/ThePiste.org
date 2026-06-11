@@ -68,7 +68,7 @@
             <div class="prep-note">
                 <label for="note-{{ $item->id }}">Notes</label>
                 <textarea id="note-{{ $item->id }}" class="input" rows="2"
-                    placeholder="Anything to remember for this event — carpool, hotel, who's going, what to ask the coach."
+                    placeholder="Anything to remember for this event: carpool, hotel, who's going, what to ask the coach."
                     wire:change="setNote({{ $item->id }}, $event.target.value)">{{ $item->notes }}</textarea>
             </div>
 

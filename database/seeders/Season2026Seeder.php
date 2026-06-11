@@ -131,7 +131,12 @@ class Season2026Seeder extends Seeder
                     'is_nac' => $e['nac'] ?? false,
                     'circuits' => $this->circuitsFrom($e['name']),
                     'contested_events' => $e['ev'],
-                    'curated_note' => $e['note'],
+                    // curated_note stays null: the events() notes below are
+                    // Region-2/Chicago-relative planning rationale, not objective
+                    // catalog facts. TierService::generatedNote() produces the
+                    // per-fencer guidance; curated_note is reserved for genuinely
+                    // objective marquee copy entered by an admin.
+                    'curated_note' => null,
                 ]
             );
         }
@@ -139,8 +144,10 @@ class Season2026Seeder extends Seeder
 
     /**
      * The 2026-27 Region 2-centric calendar, ported from the planning prototype.
-     * Notes are kept as curated marquee copy; the personalization engine generates
-     * per-fencer guidance and only falls back to these for flagship events.
+     * The 'note' on each event is design rationale (the original Chicago-fencer
+     * planning logic), not persisted: it is subjective and home-relative, so it
+     * is not written to curated_note. The engine generates objective per-fencer
+     * notes instead.
      */
     /** Circuit designators from the event name (same tokens the AskFRED sync uses). */
     private function circuitsFrom(string $name): ?array

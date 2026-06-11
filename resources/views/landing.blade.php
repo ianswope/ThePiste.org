@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ThePiste — Plan a fencer's season that adds up</title>
+    <title>ThePiste: Plan a fencer's season that adds up</title>
     <meta name="description" content="A personalized USA Fencing season planner: set a goal, build the schedule that serves it, and track results toward your rating.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

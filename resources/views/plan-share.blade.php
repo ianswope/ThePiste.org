@@ -39,7 +39,7 @@
         <div class="tile"><span class="tn">{{ $tallies['nacs'] }}</span><span class="tl">NACs</span></div>
         <div class="tile"><span class="tn">{{ $tallies['drives'] }}</span><span class="tl">Drives</span></div>
         <div class="tile"><span class="tn">{{ $tallies['flights'] }}</span><span class="tl">Flights</span></div>
-        <div class="tile"><span class="tn">{{ $tallies['est_cost'] ? '$'.number_format($tallies['est_cost']) : '—' }}</span><span class="tl">Est. budget</span></div>
+        <div class="tile"><span class="tn">{{ $tallies['est_cost'] ? '$'.number_format($tallies['est_cost']) : '–' }}</span><span class="tl">Est. budget</span></div>
     </div>
 
     @foreach ($months as $label => $rows)
@@ -65,7 +65,7 @@
     @endforeach
 
     <div class="fnote no-print">
-        <strong>Made with ThePiste.</strong> A personalized USA Fencing season planner — eligibility,
+        <strong>Made with ThePiste.</strong> A personalized USA Fencing season planner: eligibility,
         drive-vs-fly, weekend conflicts, and goal tracking, computed for your fencer.
         <a href="{{ url('/') }}" style="color:var(--green-ink);">Build your own season →</a>
     </div>

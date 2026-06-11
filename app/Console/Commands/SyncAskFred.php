@@ -37,9 +37,24 @@ class SyncAskFred extends Command
         $summary = ['created' => 0, 'updated' => 0, 'geocoded' => 0, 'out_of_season' => 0, 'errors' => []];
         $skippedTotals = ['non_us' => 0, 'no_dates' => 0, 'no_categories' => 0];
         $pages = 0;
+        $fetchFailed = false;
 
         for ($page = 1; $page <= $maxPages; $page++) {
-            $parsed = $scraper->parseListing($scraper->fetchPage($page, $from));
+            // A transient AskFRED error shouldn't abort the whole sync; retry
+            // with backoff, and if a page still fails, log it and stop the walk
+            // with whatever imported so far (the upsert is idempotent, so the
+            // next run resumes cleanly).
+            try {
+                $html = $this->fetchWithRetry($scraper, $page, $from);
+            } catch (\RuntimeException $e) {
+                $this->warn("  ! AskFRED fetch failed on page {$page}: {$e->getMessage()}; stopping with a partial sync.");
+                logger()->warning('AskFRED sync stopped on page fetch', ['page' => $page, 'error' => $e->getMessage()]);
+                $summary['errors'][] = "page {$page}: {$e->getMessage()}";
+                $fetchFailed = true;
+                break;
+            }
+
+            $parsed = $scraper->parseListing($html);
             $pages++;
 
             foreach ($parsed['skipped'] as $k => $n) {
@@ -94,7 +109,23 @@ class SyncAskFred extends Command
             $this->reportVanished();
         }
 
-        return self::SUCCESS;
+        // Surface an incomplete walk so the scheduled run is recorded as failed.
+        return $fetchFailed ? self::FAILURE : self::SUCCESS;
+    }
+
+    /** Fetch a listing page, retrying a transient error a few times with backoff. */
+    private function fetchWithRetry(AskFredScraper $scraper, int $page, ?string $from): string
+    {
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                return $scraper->fetchPage($page, $from);
+            } catch (\RuntimeException $e) {
+                if ($attempt >= 3) {
+                    throw $e;
+                }
+                Sleep::for($attempt * 2)->seconds();
+            }
+        }
     }
 
     /**
@@ -116,7 +147,7 @@ class SyncAskFred extends Command
             return;
         }
 
-        $this->warn("{$vanished->count()} upcoming event(s) no longer appear on AskFRED (possible cancellations — review in /admin):");
+        $this->warn("{$vanished->count()} upcoming event(s) no longer appear on AskFRED (possible cancellations, review in /admin):");
         foreach ($vanished as $t) {
             $this->warn("  ? {$t->starts_on->toDateString()}  {$t->name} ({$t->city}, {$t->state})");
             logger()->warning('AskFRED event vanished', ['tournament_id' => $t->id, 'name' => $t->name]);

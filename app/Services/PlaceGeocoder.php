@@ -52,7 +52,9 @@ class PlaceGeocoder
                 ]);
 
             $hit = $res->ok() ? $res->json('0') : null;
-            if (! $hit || ! isset($hit['lat'], $hit['lon'])) {
+            // Guard against a 200 with missing/non-numeric coordinates casting
+            // to (0,0) and caching a bad point.
+            if (! $hit || ! is_numeric($hit['lat'] ?? null) || ! is_numeric($hit['lon'] ?? null)) {
                 return null;
             }
 

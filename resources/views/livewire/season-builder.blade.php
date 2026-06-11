@@ -98,7 +98,7 @@
                                     <span class="adv" title="{{ $a['why'] }}">▸ {{ $a['label'] }}</span>
                                 @endforeach
                                 @if ($clash)
-                                    <span class="conflict">⚠ Both this and {{ $r['conflict_with'] }} are in the plan — same weekend, pick one</span>
+                                    <span class="conflict">⚠ Both this and {{ $r['conflict_with'] }} are in the plan: same weekend, pick one</span>
                                 @elseif ($r['conflict_with'])
                                     <span class="conflict">⚠ clashes with {{ $r['conflict_with'] }}</span>
                                 @endif
@@ -131,7 +131,7 @@
                 <span class="n">{{ $tally['nacs'] }}<small>NACs</small></span>
                 <span class="n">{{ $tally['drives'] }}<small>Drives</small></span>
                 <span class="n">{{ $tally['flights'] }}<small>Flights</small></span>
-                <span class="n">{{ $tally['est_cost'] ? '$'.number_format($tally['est_cost']) : '—' }}<small>Budget</small></span>
+                <span class="n">{{ $tally['est_cost'] ? '$'.number_format($tally['est_cost']) : '–' }}<small>Budget</small></span>
                 @if (count($clashIds))
                     <span class="n alert">{{ count($clashIds) }}<small>Clashes</small></span>
                 @endif

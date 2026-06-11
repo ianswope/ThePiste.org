@@ -104,7 +104,7 @@
         </div>
 
         <div class="section-h">Goals</div>
-        <p class="help" style="margin:0 0 14px;">Season goals (earn a rating, qualify, standing, mileage) are set in the <strong>season builder</strong> — they drive which events the planner recommends.</p>
+        <p class="help" style="margin:0 0 14px;">Season goals (earn a rating, qualify, standing, mileage) are set in the <strong>season builder</strong>; they drive which events the planner recommends.</p>
         <div class="field full">
             <label class="checkline">
                 <input type="checkbox" name="include_fie" value="1" @checked(old('include_fie', $fencer->include_fie))>

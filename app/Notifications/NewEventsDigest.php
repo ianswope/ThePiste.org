@@ -49,7 +49,7 @@ class NewEventsDigest extends FencerDigest
     {
         $t = $row['tournament'];
 
-        return "**{$t->name}** · {$t->starts_on->format('D M j')} · {$t->location()} — {$row['note']}";
+        return "**{$t->name}** · {$t->starts_on->format('D M j')} · {$t->location()} · {$row['note']}";
     }
 
     protected function callToAction(MailMessage $mail): void

@@ -32,7 +32,7 @@ class RegistrationReminderDigest extends FencerDigest
 
     protected function intro(): array
     {
-        return ['These planned events are inside their usual registration window. If you haven\'t signed up yet, now is the time — entries often close well before the first strip call.'];
+        return ['These planned events are inside their usual registration window. If you haven\'t signed up yet, now is the time; entries often close well before the first strip call.'];
     }
 
     protected function rowsOf(array $group): iterable
@@ -45,7 +45,7 @@ class RegistrationReminderDigest extends FencerDigest
         $t = $row->tournament;
         $days = (int) now()->startOfDay()->diffInDays($t->starts_on, false);
         $when = $t->starts_on->format('D M j').' ('.($days === 0 ? 'today' : "in {$days} day".($days === 1 ? '' : 's')).')';
-        $register = $t->source_url ? " — [register on AskFRED]({$t->source_url})" : '';
+        $register = $t->source_url ? " · [register on AskFRED]({$t->source_url})" : '';
 
         return "**{$t->name}** · {$when} · {$t->location()}{$register}";
     }

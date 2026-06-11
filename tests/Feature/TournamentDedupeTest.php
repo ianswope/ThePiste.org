@@ -42,6 +42,9 @@ class TournamentDedupeTest extends TestCase
     public function test_sync_adopts_a_matching_curated_row_instead_of_duplicating(): void
     {
         $curated = $this->curatedAirForce();
+        // The seeder no longer writes subjective notes, so the test sets its own
+        // marquee curation to prove the merge preserves an admin's curated_note.
+        $curated->update(['curated_note' => 'Marquee NAC-adjacent ROC with a strong D1A field.']);
         $originalNote = $curated->curated_note;
         $this->assertNotNull($originalNote);
 
@@ -76,6 +79,7 @@ class TournamentDedupeTest extends TestCase
     {
         // Simulate the bug: the synced duplicate already exists.
         $curated = $this->curatedAirForce();
+        $curated->update(['curated_note' => 'Marquee NAC-adjacent ROC with a strong D1A field.']);
         $dupe = Tournament::create([
             'season_id' => Season::first()->id,
             'name' => 'Air Force Academy ROC & RJCC',

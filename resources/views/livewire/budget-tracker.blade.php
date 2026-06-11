@@ -28,7 +28,7 @@
                     <span class="tn" style="color:{{ $summary['surplus'] < 0 ? 'var(--red-ink)' : 'var(--green-ink)' }}">${{ number_format(abs($summary['surplus'])) }}</span>
                     <span class="tl">{{ $summary['surplus'] < 0 ? 'Over budget' : 'Budget left' }}</span>
                 @else
-                    <span class="tn">—</span><span class="tl">Budget left</span>
+                    <span class="tn">–</span><span class="tl">Budget left</span>
                 @endif
             </div>
             <div class="tile"><span class="tn">${{ number_format($summary['paid']) }}</span><span class="tl">Paid</span></div>
@@ -49,7 +49,7 @@
 
     <div class="panel" style="overflow-x:auto;">
         <div class="row-between" style="margin-bottom:10px;">
-            <strong style="font-size:15px;">Trip costs <span style="color:var(--faint); font-weight:400;">— editing {{ $layer === 'est' ? 'estimates' : 'actuals' }}</span></strong>
+            <strong style="font-size:15px;">Trip costs <span style="color:var(--faint); font-weight:400;">· editing {{ $layer === 'est' ? 'estimates' : 'actuals' }}</span></strong>
         </div>
 
         @if ($items->isEmpty())
@@ -84,7 +84,7 @@
                                            aria-label="{{ $t->name }} {{ $label }} {{ $layer === 'est' ? 'estimate' : 'actual' }}">
                                 </td>
                             @endforeach
-                            <td class="bt-total">{{ $item->effectiveTotal() > 0 ? '$'.number_format($item->effectiveTotal(), 2) : '—' }}</td>
+                            <td class="bt-total">{{ $item->effectiveTotal() > 0 ? '$'.number_format($item->effectiveTotal(), 2) : '–' }}</td>
                             <td>
                                 <select class="input compact" wire:model.change="statuses.{{ $item->id }}" aria-label="{{ $t->name }} status">
                                     @foreach (\App\Models\PlanItem::STATUSES as $s)
