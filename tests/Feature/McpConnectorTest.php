@@ -141,13 +141,25 @@ class McpConnectorTest extends TestCase
             ->tool(GetPlan::class)
             ->assertOk()
             ->assertSee('October NAC')
-            ->assertSee('tallies');
+            ->assertSee('tallies')
+            ->assertSee('2026-10-09 to 2026-10-12') // dates is a start-to-end range, matching get-season-outlook
+            ->assertSee('ics_url')                  // calendar feed url surfaced
+            ->assertSee('planned');                 // per-event prep/budget state surfaced
 
         ThePisteServer::actingAs($user)
             ->tool(GetProgress::class)
             ->assertOk()
             ->assertSee('target_rating')
             ->assertSee('season_stats');
+    }
+
+    public function test_manage_plan_remove_reports_when_not_in_plan(): void
+    {
+        // October NAC is never added, so removing it is a no-op, not a success.
+        ThePisteServer::actingAs($this->makeUser())
+            ->tool(ManagePlan::class, ['action' => 'remove', 'tournament' => 'October NAC'])
+            ->assertOk()
+            ->assertSee('is not in');
     }
 
     public function test_manage_plan_remove_preserves_recorded_costs(): void

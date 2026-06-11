@@ -92,6 +92,29 @@ class AskFredSyncTest extends TestCase
         $this->assertSame(3, Tournament::count());
     }
 
+    public function test_a_persistent_page_error_stops_with_a_partial_sync_and_fails(): void
+    {
+        Season::create([
+            'name' => '2026-27', 'slug' => '2026-27',
+            'starts_on' => '2026-08-01', 'ends_on' => '2027-05-31', 'is_active' => true,
+        ]);
+
+        // Page 1 imports fine; page 2 returns a server error on every retry.
+        Http::fake([
+            'www.askfred.net/tournaments?*page=1*' => Http::response($this->fixture()),
+            'www.askfred.net/tournaments*' => Http::response('upstream error', 503),
+            'nominatim.openstreetmap.org/*' => Http::response([['lat' => '43.073', 'lon' => '-89.401']]),
+        ]);
+        Sleep::fake();
+
+        // The walk stops on the bad page but keeps page 1's import; the run is
+        // reported as failed (non-zero exit) rather than crashing mid-sync.
+        $this->artisan('thepiste:sync-askfred', ['--from' => '2026-08-01'])
+            ->assertExitCode(1);
+
+        $this->assertSame(3, Tournament::count());
+    }
+
     public function test_date_change_at_source_updates_in_place_instead_of_duplicating(): void
     {
         $season = Season::create([

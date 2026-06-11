@@ -109,6 +109,24 @@ class PrepTrackerTest extends TestCase
         $this->assertSame(['done' => 4, 'total' => 5], $item->fresh()->prepProgress());
     }
 
+    public function test_mutations_cannot_touch_another_users_plan_item(): void
+    {
+        [$userA] = $this->makeUserWithPlannedEvent();
+        [, $itemB] = $this->makeUserWithPlannedEvent();
+        $this->actingAs($userA);
+
+        // Acting as A, aim every mutation at B's plan item id.
+        Livewire::test(PrepTracker::class)
+            ->call('setField', $itemB->id, 'coaching_status', 'arranged')
+            ->call('toggleRegistered', $itemB->id)
+            ->call('setNote', $itemB->id, 'injected by another user');
+
+        $itemB->refresh();
+        $this->assertSame('undecided', $itemB->coaching_status);
+        $this->assertSame('planned', $itemB->status);
+        $this->assertNull($itemB->notes);
+    }
+
     public function test_skipped_events_are_not_shown(): void
     {
         [$user, $item] = $this->makeUserWithPlannedEvent();
