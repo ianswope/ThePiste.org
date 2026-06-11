@@ -7,6 +7,7 @@ use App\Models\Fencer;
 use App\Services\ZipGeocoder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -137,14 +138,18 @@ class FencerController extends Controller
 
     private function rebuildWeapons(Fencer $fencer, array $weapons, string $primary): void
     {
-        $fencer->weapons()->delete();
-        foreach ($weapons as $weapon => $rating) {
-            $fencer->weapons()->create([
-                'weapon' => $weapon,
-                'rating' => $rating,
-                'is_primary' => $weapon === $primary,
-            ]);
-        }
+        // Atomic: a failure partway through must not leave the fencer with the
+        // old weapons deleted and the new ones not yet written.
+        DB::transaction(function () use ($fencer, $weapons, $primary) {
+            $fencer->weapons()->delete();
+            foreach ($weapons as $weapon => $rating) {
+                $fencer->weapons()->create([
+                    'weapon' => $weapon,
+                    'rating' => $rating,
+                    'is_primary' => $weapon === $primary,
+                ]);
+            }
+        });
     }
 
     private function applyGeocode(Fencer $fencer, ZipGeocoder $geocoder): void

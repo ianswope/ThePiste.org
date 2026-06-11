@@ -61,8 +61,10 @@ class SeasonBuilder extends Component
         if ($this->plan->items()->count() === 0) {
             $anchors = $this->rows->filter(fn ($r) => $r['non_negotiable'])
                 ->map(fn ($r) => $r['tournament']->id)->values()->all();
+            // firstOrCreate keeps a concurrent first-visit (two tabs) from
+            // double-seeding into the (season_plan_id, tournament_id) unique key.
             foreach ($anchors as $id) {
-                $this->plan->items()->create(['tournament_id' => $id]);
+                $this->plan->items()->firstOrCreate(['tournament_id' => $id]);
             }
             $this->selected = $anchors;
         }
@@ -88,7 +90,8 @@ class SeasonBuilder extends Component
         } else {
             // Adding: re-activate a previously-skipped item (restoring its costs)
             // rather than orphaning it and starting a duplicate from scratch.
-            $item ? $item->update(['status' => 'planned']) : $this->plan->items()->create(['tournament_id' => $tournamentId]);
+            // firstOrCreate guards against a concurrent add racing the unique key.
+            $item ? $item->update(['status' => 'planned']) : $this->plan->items()->firstOrCreate(['tournament_id' => $tournamentId]);
             $this->selected[] = $tournamentId;
         }
     }

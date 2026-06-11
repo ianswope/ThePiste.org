@@ -55,13 +55,20 @@ class ManagePlan extends Tool
         if ($data['action'] === 'add') {
             // Re-activate a previously-removed (skipped) item so its recorded
             // costs come back, rather than orphaning them under a fresh row.
-            $item ? $item->update(['status' => 'planned']) : $plan->items()->create(['tournament_id' => $tournament->id]);
+            // firstOrCreate guards against a concurrent add racing the unique key.
+            $item ? $item->update(['status' => 'planned']) : $plan->items()->firstOrCreate(['tournament_id' => $tournament->id]);
 
             return Response::text("Added {$tournament->name} ({$tournament->starts_on->format('M j')}, {$tournament->location()}) to {$fencer->name}'s plan.");
         }
 
+        // Removing something that isn't in the plan is a no-op, not a success:
+        // tell the caller plainly rather than confirming a removal that didn't happen.
+        if (! $item) {
+            return Response::text("{$tournament->name} is not in {$fencer->name}'s plan.");
+        }
+
         // Keeps the row as skipped if costs/payments were recorded (see PlanItem).
-        $item?->removeFromPlan();
+        $item->removeFromPlan();
 
         return Response::text("Removed {$tournament->name} from {$fencer->name}'s plan.");
     }
