@@ -54,6 +54,22 @@ return new class extends Migration
         Schema::table('fencers', function (Blueprint $table) {
             $table->string('goal')->nullable();
         });
+
+        // Reverse the up() backfill so a rollback doesn't silently null every
+        // fencer's goal. Map each fencer's active goal back to the old enum
+        // (one per fencer; the old column held a single goal).
+        $reverse = [
+            'rating' => 'earn_b',
+            'qualify' => 'qualify_jo',
+            'standing' => 'regional_standing',
+            'develop' => 'explore',
+        ];
+        foreach (DB::table('goals')->where('status', 'active')->orderBy('id')->get(['fencer_id', 'type']) as $g) {
+            if ($enum = $reverse[$g->type] ?? null) {
+                DB::table('fencers')->where('id', $g->fencer_id)->update(['goal' => $enum]);
+            }
+        }
+
         Schema::dropIfExists('goals');
     }
 };
